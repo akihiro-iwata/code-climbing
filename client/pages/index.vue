@@ -23,7 +23,11 @@
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="editor"><!-- エディタ -->
-        ここがエディタ
+        <editor
+          v-model="content"
+          lang="ruby"
+          theme="github"
+          @init="editorInit"/>
       </div><!-- 終点:エディタ -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="console">
@@ -42,7 +46,21 @@
 
 <script>
 export default {
-  components: {}
+  components: {
+    editor: require('vue2-ace-editor')
+  },
+  data() {
+    return {
+      content: ''
+    }
+  },
+  methods: {
+    editorInit() {
+      require('brace/ext/language_tools')
+      require('brace/mode/ruby')
+      require('brace/theme/github')
+    }
+  }
 }
 </script>
 
