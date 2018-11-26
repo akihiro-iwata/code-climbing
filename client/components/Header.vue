@@ -6,9 +6,12 @@
     <div style="width: 15px"/><!-- 隙間 -->
     <span class="logo">Code Climbing</span>
     <div style="width: 50vw"/><!-- 隙間 -->
-    <span class="nameLabel">名前</span>
+    <span
+      v-if="showName"
+      class="nameLabel">名前</span>
     <div style="width: 15px"/><!-- 隙間 -->
     <input
+      v-if="showName"
       class="nameBox"
       type="text"
       placeholder="名前を入力してください">
@@ -16,6 +19,14 @@
 </template>
 
 <script>
+export default {
+  props: {
+    showName: {
+      default: true,
+      type: Boolean
+    }
+  }
+}
 </script>
 
 <style scoped>

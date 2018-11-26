@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <Header/>
+    <Header :show-name="true"/>
     <div style="height: 10px; width: 100vw"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
