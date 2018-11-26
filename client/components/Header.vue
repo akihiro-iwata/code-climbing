@@ -29,7 +29,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .header {
   height: 8vh;
   width: 100vw;

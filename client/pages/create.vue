@@ -23,13 +23,30 @@
         </div><!-- 終点:コンソール -->
         <div class="answer">
           <div style="width: 100%; height: 10px"/>
-          <div style="margin-left: 10px; font-size: 33px">正解</div>
+          <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
           <input
+            v-for="answer in answers"
+            :key="answer.index"
+            :value="answer"
+            class="input"
+            type="text"
+            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
+          <input
+            v-model="inputAnswer"
             class="input"
             type="text"
             placeholder="e.g) Hello World"
-            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px">
+            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
+          <div style="width: 100%; height: 10px"/>
+          <span
+            class="icon"
+            style="width: 100%; height: 44px; font-size: 36px">
+            <i
+              class="fas fa-plus-circle"
+              @click="addAnswer"
+            />
+          </span>
         </div><!-- 終点:コンソール -->
       </div>
 
@@ -54,7 +71,9 @@ export default {
   },
   data() {
     return {
-      content: ''
+      content: '',
+      answers: [],
+      inputAnswer: ''
     }
   },
   methods: {
@@ -62,6 +81,10 @@ export default {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
       require('brace/theme/github')
+    },
+    addAnswer() {
+      this.answers.push(this.inputAnswer)
+      this.inputAnswer = ''
     }
   }
 }
@@ -123,6 +146,7 @@ export default {
       height: 50%;
       border: #999999 1px solid;
       margin-top: 10px;
+      background-color: #f5f5f5;
     }
   }
 }

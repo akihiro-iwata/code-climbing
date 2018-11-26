@@ -32,6 +32,10 @@ module.exports = {
   ** Global CSS
   */
   css: [
+    '@fortawesome/fontawesome-free-webfonts',
+    '@fortawesome/fontawesome-free-webfonts/css/fa-brands.css',
+    '@fortawesome/fontawesome-free-webfonts/css/fa-regular.css',
+    '@fortawesome/fontawesome-free-webfonts/css/fa-solid.css'
   ],
 
   /*
@@ -44,7 +48,7 @@ module.exports = {
   /*
   ** Nuxt.js modules
   */
-  modules: [,
+  modules: [
     // Doc:https://github.com/nuxt-community/modules/tree/master/packages/bulma
     '@nuxtjs/bulma'
   ],
