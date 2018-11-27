@@ -35,15 +35,14 @@ module.exports = {
     '@fortawesome/fontawesome-free-webfonts',
     '@fortawesome/fontawesome-free-webfonts/css/fa-brands.css',
     '@fortawesome/fontawesome-free-webfonts/css/fa-regular.css',
-    '@fortawesome/fontawesome-free-webfonts/css/fa-solid.css'
+    '@fortawesome/fontawesome-free-webfonts/css/fa-solid.css',
+    '@/assets/css/github-markdown.css'
   ],
 
   /*
   ** Plugins to load before mounting the App
   */
-  plugins: [
-    '~/plugins/firebase.js'
-  ],
+  plugins: ['~/plugins/firebase.js'],
 
   /*
   ** Nuxt.js modules

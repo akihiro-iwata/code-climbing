@@ -5,8 +5,22 @@
     <div class="contents">
       <div class="question"><!-- 問題文 -->
         <textarea
-          class="textarea"
+          v-if="!isPreview"
+          v-model="memo"
+          class="textarea markdown"
           placeholder="問題文をここに書きましょう"/>
+        <div
+          v-if="isPreview"
+          id="preview"
+          class="preview markdown-body"
+          v-html="preview()"/>
+        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+        <button
+          class="button is-info"
+          @click="isPreview = !isPreview">
+          <span v-if="!isPreview">プレビュー</span>
+          <span v-if="isPreview">編集</span>
+        </button>
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="editor"><!-- エディタ -->
@@ -62,6 +76,8 @@
 </template>
 
 <script>
+import marked from 'marked'
+import hljs from 'highlightjs'
 import Header from '../components/Header'
 
 export default {
@@ -73,8 +89,21 @@ export default {
     return {
       content: '',
       answers: [],
-      inputAnswer: ''
+      inputAnswer: '',
+      isPreview: false,
+      memo: ''
     }
+  },
+  created() {
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      langPrefix: '',
+      highlight: function(code, langAndTitle, callback) {
+        const lang = langAndTitle ? langAndTitle.split(':')[0] : ''
+        return hljs.highlightAuto(code, [lang]).value
+      }
+    })
   },
   methods: {
     editorInit() {
@@ -85,6 +114,15 @@ export default {
     addAnswer() {
       this.answers.push(this.inputAnswer)
       this.inputAnswer = ''
+    },
+    preview() {
+      let html = marked(this.memo)
+      return this.renderCheckbox(html)
+    },
+    renderCheckbox(html) {
+      return html
+        .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
+        .replace(/\[ \]/g, '<input type="checkbox">')
     }
   }
 }
@@ -115,8 +153,11 @@ export default {
 
     .textarea {
       width: 100%;
-      height: 100%;
-      max-height: 100vh;
+      height: 72vh;
+    }
+
+    .preview {
+      min-height: 72vh;
     }
   }
 
