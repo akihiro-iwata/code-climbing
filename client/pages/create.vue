@@ -23,30 +23,51 @@
         </button>
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
-      <div class="editor"><!-- エディタ -->
-        <editor
-          v-model="content"
-          lang="ruby"
-          theme="github"
-          @init="editorInit"/>
-        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
-        <div class="editorButton">
-          <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
-            <button
-              class="button is-primary"
-              @click="run">
-              <span>実行</span>
-            </button>
-          </div>
-          <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
-            <button
-              class="button is-danger"
-              @click="reset">
-              <span>リセット</span>
-            </button>
-          </div>
+      <div class="center">
+        <div
+          class="tabs is-centered"
+          style="margin-bottom: 0; height: 6vh">
+          <ul>
+            <li
+              :class="{'is-active': !isAnswerMode}"
+              @click="toggleEditorMode(false)"><a>問題</a></li>
+            <li
+              :class="{'is-active': isAnswerMode}"
+              @click="toggleEditorMode(true)"><a>模範解答</a></li>
+          </ul>
         </div>
-      </div><!-- 終点:エディタ -->
+        <div class="editor"><!-- エディタ -->
+          <editor
+            v-if="isAnswerMode"
+            v-model="answerContent"
+            lang="ruby"
+            theme="github"
+            @init="editorInit"/>
+          <editor
+            v-if="!isAnswerMode"
+            v-model="questionContent"
+            lang="ruby"
+            theme="github"
+            @init="editorInit"/>
+          <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+          <div class="editorButton">
+            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
+              <button
+                class="button is-primary"
+                @click="run">
+                <span>実行</span>
+              </button>
+            </div>
+            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
+              <button
+                class="button is-danger"
+                @click="reset">
+                <span>リセット</span>
+              </button>
+            </div>
+          </div>
+        </div><!-- 終点:エディタ -->
+      </div>
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
         <div class="console">
@@ -104,11 +125,13 @@ export default {
   },
   data() {
     return {
-      content: '',
+      questionContent: '',
+      answerContent: '',
       answers: [],
       inputAnswer: '',
       isPreview: false,
-      memo: ''
+      memo: '',
+      isAnswerMode: false
     }
   },
   created() {
@@ -149,6 +172,9 @@ export default {
       // FIXME
       this.content = ''
       console.log('reset')
+    },
+    toggleEditorMode(isAnswerMode) {
+      this.isAnswerMode = isAnswerMode
     }
   }
 }
@@ -188,17 +214,21 @@ export default {
     }
   }
 
-  .editor {
+  .center {
     width: 32vw;
-    height: 73.5vh;
-    border: #999999 1px solid;
-  }
+    height: 82vh;
 
-  .editorButton {
-    width: 32vw;
-    height: 10vh;
-    display: flex;
-    flex-wrap: wrap;
+    .editor {
+      height: 67vh;
+      border: #999999 1px solid;
+    }
+
+    .editorButton {
+      width: 32vw;
+      height: 10vh;
+      display: flex;
+      flex-wrap: wrap;
+    }
   }
 
   .right {
