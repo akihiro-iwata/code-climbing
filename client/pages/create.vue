@@ -29,6 +29,23 @@
           lang="ruby"
           theme="github"
           @init="editorInit"/>
+        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+        <div class="editorButton">
+          <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
+            <button
+              class="button is-primary"
+              @click="run">
+              <span>実行</span>
+            </button>
+          </div>
+          <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
+            <button
+              class="button is-danger"
+              @click="reset">
+              <span>リセット</span>
+            </button>
+          </div>
+        </div>
       </div><!-- 終点:エディタ -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
@@ -123,6 +140,15 @@ export default {
       return html
         .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
         .replace(/\[ \]/g, '<input type="checkbox">')
+    },
+    run() {
+      // FIXME
+      console.log('run')
+    },
+    reset() {
+      // FIXME
+      this.content = ''
+      console.log('reset')
     }
   }
 }
@@ -142,6 +168,7 @@ export default {
   width: 100vw;
   display: flex;
   flex-wrap: wrap;
+  background-color: #f5f5f5;
 
   .question {
     width: 32vw;
@@ -163,10 +190,15 @@ export default {
 
   .editor {
     width: 32vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    border-left: #999999 1px solid;
+    height: 73.5vh;
+    border: #999999 1px solid;
+  }
+
+  .editorButton {
+    width: 32vw;
+    height: 10vh;
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .right {
