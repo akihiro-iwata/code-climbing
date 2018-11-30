@@ -170,7 +170,11 @@ export default {
     },
     reset() {
       // FIXME
-      this.content = ''
+      if (this.isAnswerMode) {
+        this.answerContent = ''
+      } else {
+        this.questionContent = ''
+      }
       console.log('reset')
     },
     toggleEditorMode(isAnswerMode) {
@@ -186,7 +190,6 @@ export default {
   height: 100vh;
   display: flex;
   flex-wrap: wrap;
-  font-family: 'Noto Sans JP', sans-serif;
 }
 
 .contents {
