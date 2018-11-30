@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <Header :show-name="false"/>
-    <div style="height: 10px; width: 100vw"/><!-- 隙間 -->
+    <div style="height: 10px; width: 100vw; background-color: #f5f5f5"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
         <textarea
