@@ -16,7 +16,7 @@
           <editor
             v-model="answerContent"
             lang="ruby"
-            theme="github"
+            theme="vibrant_ink"
             @init="editorInit"/>
           <div style="height: 10px; width: 100%"/><!-- 隙間 -->
           <div class="editorButton">
@@ -106,6 +106,7 @@ export default {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
       require('brace/theme/github')
+      require('brace/theme/vibrant_ink')
     },
     preview() {
       let html = marked(this.memo)
