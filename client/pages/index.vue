@@ -39,6 +39,10 @@ export default {
       name: ''
     }
   },
+  created() {
+    Opal.load('opal')
+    Opal.load('opal-parser')
+  },
   methods: {
     ...mapActions('users', ['login']),
     async doLogin() {

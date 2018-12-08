@@ -13,6 +13,10 @@ module.exports = {
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: pkg.description }
     ],
+    script: [
+      { src: 'https://cdn.opalrb.com/opal/current/opal.js' },
+      { src: 'https://cdn.opalrb.com/opal/current/opal-parser.js' },
+    ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
       {

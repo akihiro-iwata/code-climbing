@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <Header :show-name="false"/>
-    <div style="height: 10px; width: 100vw; background-color: #f5f5f5"/><!-- 隙間 -->
+    <div style="height: 10px; width: 100vw"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
         <textarea
@@ -23,55 +23,17 @@
         </button>
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
-      <div class="center">
-        <div
-          class="tabs is-centered"
-          style="margin-bottom: 0; height: 6vh">
-          <ul>
-            <li
-              :class="{'is-active': !isAnswerMode}"
-              @click="toggleEditorMode(false)"><a>問題</a></li>
-            <li
-              :class="{'is-active': isAnswerMode}"
-              @click="toggleEditorMode(true)"><a>模範解答</a></li>
-          </ul>
-        </div>
-        <div class="editor"><!-- エディタ -->
-          <editor
-            v-if="isAnswerMode"
-            v-model="answerContent"
-            lang="ruby"
-            theme="github"
-            @init="editorInit"/>
-          <editor
-            v-if="!isAnswerMode"
-            v-model="questionContent"
-            lang="ruby"
-            theme="github"
-            @init="editorInit"/>
-          <div style="height: 10px; width: 100%"/><!-- 隙間 -->
-          <div class="editorButton">
-            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
-              <button
-                class="button is-primary"
-                @click="run">
-                <span>実行</span>
-              </button>
-            </div>
-            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
-              <button
-                class="button is-danger"
-                @click="reset">
-                <span>リセット</span>
-              </button>
-            </div>
-          </div>
-        </div><!-- 終点:エディタ -->
-      </div>
+      <div class="editor"><!-- エディタ -->
+        <editor
+          v-model="content"
+          lang="ruby"
+          theme="github"
+          @init="editorInit"/>
+      </div><!-- 終点:エディタ -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
         <div class="console">
-          ここがコンソール
+          {{ console_out }}
         </div><!-- 終点:コンソール -->
         <div class="answer">
           <div style="width: 100%; height: 10px"/>
@@ -104,7 +66,10 @@
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <button class="button prev is-light">戻る</button>
+      <button
+        class="button prev is-light"
+        @click="evalRuby"
+      >戻る</button>
       <div style="width: 15px"/><!-- 隙間 -->
       <span class="question-index">3/4</span>
       <div style="width: 15px"/><!-- 隙間 -->
@@ -125,13 +90,13 @@ export default {
   },
   data() {
     return {
-      questionContent: '',
-      answerContent: '',
+      content: '',
       answers: [],
       inputAnswer: '',
       isPreview: false,
       memo: '',
-      isAnswerMode: false
+      isAnswerMode: false,
+      console_out: ''
     }
   },
   created() {
@@ -144,6 +109,8 @@ export default {
         return hljs.highlightAuto(code, [lang]).value
       }
     })
+    Opal.load('opal')
+    Opal.load('opal-parser')
   },
   methods: {
     editorInit() {
@@ -163,6 +130,17 @@ export default {
       return html
         .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
         .replace(/\[ \]/g, '<input type="checkbox">')
+    },
+    evalRuby() {
+      let tmpjs = Opal.compile(this.content)
+      // console.log を移す
+      let console_log_org = console.log
+      console.log = function(msg) {
+        this.console_out = this.console_out + msg
+      }
+      eval(tmpjs)
+      // console.log を戻す
+      console.log = console_log_org
     },
     run() {
       // FIXME
@@ -190,6 +168,7 @@ export default {
   height: 100vh;
   display: flex;
   flex-wrap: wrap;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 
 .contents {
@@ -217,21 +196,12 @@ export default {
     }
   }
 
-  .center {
+  .editor {
     width: 32vw;
-    height: 82vh;
-
-    .editor {
-      height: 67vh;
-      border: #999999 1px solid;
-    }
-
-    .editorButton {
-      width: 32vw;
-      height: 10vh;
-      display: flex;
-      flex-wrap: wrap;
-    }
+    height: 100%;
+    border-top: #999999 1px solid;
+    border-right: #999999 1px solid;
+    border-left: #999999 1px solid;
   }
 
   .right {
