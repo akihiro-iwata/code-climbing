@@ -1,39 +1,46 @@
 <template>
   <div class="page">
     <Header :show-name="false"/>
-    <div style="height: 10px; width: 100vw"/><!-- 隙間 -->
+    <div style="height: 10px; width: 100vw; background-color: #f5f5f5"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
-        <textarea
-          v-if="!isPreview"
-          v-model="memo"
-          class="textarea markdown"
-          placeholder="問題文をここに書きましょう"/>
         <div
-          v-if="isPreview"
           id="preview"
           class="preview markdown-body"
           v-html="preview()"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
-        <button
-          class="button is-info"
-          @click="isPreview = !isPreview">
-          <span v-if="!isPreview">プレビュー</span>
-          <span v-if="isPreview">編集</span>
-        </button>
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
-      <div class="editor"><!-- エディタ -->
-        <editor
-          v-model="content"
-          lang="ruby"
-          theme="github"
-          @init="editorInit"/>
-      </div><!-- 終点:エディタ -->
+      <div class="center">
+        <div class="editor"><!-- エディタ -->
+          <editor
+            v-model="answerContent"
+            lang="ruby"
+            theme="github"
+            @init="editorInit"/>
+          <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+          <div class="editorButton">
+            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
+              <button
+                class="button is-primary"
+                @click="run">
+                <span>実行</span>
+              </button>
+            </div>
+            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
+              <button
+                class="button is-danger"
+                @click="reset">
+                <span>リセット</span>
+              </button>
+            </div>
+          </div>
+        </div><!-- 終点:エディタ -->
+      </div>
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
         <div class="console">
-          {{ console_out }}
+          ここがコンソール
         </div><!-- 終点:コンソール -->
         <div class="answer">
           <div style="width: 100%; height: 10px"/>
@@ -47,29 +54,17 @@
             type="text"
             style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
           <input
-            v-model="inputAnswer"
             class="input"
             type="text"
             placeholder="e.g) Hello World"
             style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
           <div style="width: 100%; height: 10px"/>
-          <span
-            class="icon"
-            style="width: 100%; height: 44px; font-size: 36px">
-            <i
-              class="fas fa-plus-circle"
-              @click="addAnswer"
-            />
-          </span>
         </div><!-- 終点:コンソール -->
       </div>
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <button
-        class="button prev is-light"
-        @click="evalRuby"
-      >戻る</button>
+      <button class="button prev is-light">戻る</button>
       <div style="width: 15px"/><!-- 隙間 -->
       <span class="question-index">3/4</span>
       <div style="width: 15px"/><!-- 隙間 -->
@@ -90,13 +85,9 @@ export default {
   },
   data() {
     return {
-      content: '',
+      answerContent: '',
       answers: [],
-      inputAnswer: '',
-      isPreview: false,
-      memo: '',
-      isAnswerMode: false,
-      console_out: ''
+      memo: ''
     }
   },
   created() {
@@ -109,18 +100,12 @@ export default {
         return hljs.highlightAuto(code, [lang]).value
       }
     })
-    Opal.load('opal')
-    Opal.load('opal-parser')
   },
   methods: {
     editorInit() {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
       require('brace/theme/github')
-    },
-    addAnswer() {
-      this.answers.push(this.inputAnswer)
-      this.inputAnswer = ''
     },
     preview() {
       let html = marked(this.memo)
@@ -131,32 +116,12 @@ export default {
         .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
         .replace(/\[ \]/g, '<input type="checkbox">')
     },
-    evalRuby() {
-      let tmpjs = Opal.compile(this.content)
-      // console.log を移す
-      let console_log_org = console.log
-      console.log = function(msg) {
-        this.console_out = this.console_out + msg
-      }
-      eval(tmpjs)
-      // console.log を戻す
-      console.log = console_log_org
-    },
     run() {
       // FIXME
       console.log('run')
     },
     reset() {
-      // FIXME
-      if (this.isAnswerMode) {
-        this.answerContent = ''
-      } else {
-        this.questionContent = ''
-      }
-      console.log('reset')
-    },
-    toggleEditorMode(isAnswerMode) {
-      this.isAnswerMode = isAnswerMode
+      this.answerContent = ''
     }
   }
 }
@@ -168,7 +133,6 @@ export default {
   height: 100vh;
   display: flex;
   flex-wrap: wrap;
-  font-family: 'Noto Sans JP', sans-serif;
 }
 
 .contents {
@@ -196,12 +160,21 @@ export default {
     }
   }
 
-  .editor {
+  .center {
     width: 32vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    border-left: #999999 1px solid;
+    height: 82vh;
+
+    .editor {
+      height: 67vh;
+      border: #999999 1px solid;
+    }
+
+    .editorButton {
+      width: 32vw;
+      height: 10vh;
+      display: flex;
+      flex-wrap: wrap;
+    }
   }
 
   .right {
