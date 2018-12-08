@@ -40,7 +40,9 @@
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
         <div class="console">
-          ここがコンソール
+          <div
+            v-for="out in consoleOut"
+            :key="out.index">{{ out }}</div>
         </div><!-- 終点:コンソール -->
         <div class="answer">
           <div style="width: 100%; height: 10px"/>
@@ -52,12 +54,8 @@
             :value="answer"
             class="input"
             type="text"
-            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
-          <input
-            class="input"
-            type="text"
-            placeholder="e.g) Hello World"
-            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
+            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px"
+            disabled>
           <div style="width: 100%; height: 10px"/>
         </div><!-- 終点:コンソール -->
       </div>
@@ -70,6 +68,44 @@
       <div style="width: 15px"/><!-- 隙間 -->
       <button class="button next is-primary">次へ</button>
     </div><!-- 終点: footer -->
+
+    <div
+      :class="{'is-active' : isCorrect }"
+      class="modal">
+      <div class="modal-background"/>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">正解です！</p>
+          <button
+            class="delete"
+            aria-label="close"
+            @click="isCorrect = false"/>
+        </header>
+        <footer class="modal-card-foot">
+          <button class="button is-success">次の問題へ</button>
+          <button class="button">やめる</button>
+        </footer>
+      </div>
+    </div>
+
+    <div
+      :class="{'is-active' : isFalse }"
+      class="modal">
+      <div class="modal-background"/>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">不正解です！</p>
+          <button
+            class="delete"
+            aria-label="close"
+            @click="isFalse = false"/>
+        </header>
+        <footer class="modal-card-foot">
+          <button class="button is-danger">再トライ</button>
+        </footer>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -87,7 +123,11 @@ export default {
     return {
       answerContent: '',
       answers: [],
-      memo: ''
+      memo: '',
+      consoleOut: [],
+      returnOut: '',
+      isCorrect: false,
+      isFalse: false
     }
   },
   created() {
@@ -100,6 +140,8 @@ export default {
         return hljs.highlightAuto(code, [lang]).value
       }
     })
+    Opal.load('opal')
+    Opal.load('opal-parser')
   },
   methods: {
     editorInit() {
@@ -120,9 +162,19 @@ export default {
     run() {
       // FIXME
       console.log('run')
+      this.consoleOut = []
+      const tmpjs = Opal.compile(this.answerContent)
+      const console_log_org = console.log
+      console.log = this.output
+      this.returnOut = eval(tmpjs)
+      console.log = console_log_org
+
     },
     reset() {
       this.answerContent = ''
+    },
+    output(msg) {
+      this.consoleOut.push(msg)
     }
   }
 }
@@ -189,6 +241,10 @@ export default {
       width: 32vw;
       height: 50%;
       border: #999999 1px solid;
+      padding-left: 10px;
+      padding-right: 10px;
+      padding-top: 5px;
+      word-wrap: break-word;
     }
 
     .answer {
