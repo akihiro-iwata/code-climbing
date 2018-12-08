@@ -33,7 +33,7 @@
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
         <div class="console">
-          ここがコンソール
+          {{ console_out }}
         </div><!-- 終点:コンソール -->
         <div class="answer">
           <div style="width: 100%; height: 10px"/>
@@ -66,7 +66,10 @@
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <button class="button prev is-light">戻る</button>
+      <button
+        class="button prev is-light"
+        @click="evalRuby"
+      >戻る</button>
       <div style="width: 15px"/><!-- 隙間 -->
       <span class="question-index">3/4</span>
       <div style="width: 15px"/><!-- 隙間 -->
@@ -91,7 +94,8 @@ export default {
       answers: [],
       inputAnswer: '',
       isPreview: false,
-      memo: ''
+      memo: '',
+      console_out: ''
     }
   },
   created() {
@@ -104,6 +108,8 @@ export default {
         return hljs.highlightAuto(code, [lang]).value
       }
     })
+    Opal.load('opal')
+    Opal.load('opal-parser')
   },
   methods: {
     editorInit() {
@@ -123,6 +129,17 @@ export default {
       return html
         .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
         .replace(/\[ \]/g, '<input type="checkbox">')
+    },
+    evalRuby() {
+      let tmpjs = Opal.compile(this.content)
+      // console.log を移す
+      let console_log_org = console.log
+      console.log = function(msg) {
+        this.console_out = this.console_out + msg
+      }
+      eval(tmpjs)
+      // console.log を戻す
+      console.log = console_log_org
     }
   }
 }

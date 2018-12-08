@@ -44,6 +44,10 @@ export default {
       content: ''
     }
   },
+  created() {
+    Opal.load('opal')
+    Opal.load('opal-parser')
+  },
   methods: {
     editorInit() {
       require('brace/ext/language_tools')
