@@ -1,120 +1,78 @@
 <template>
   <div class="page">
-    <Header :show-name="true"/>
-    <div style="height: 10px; width: 100vw"/><!-- 隙間 -->
-    <div class="contents">
-      <div class="question"><!-- 問題文 -->
-        <textarea
-          class="textarea"
-          placeholder="問題文をここに書きましょう"/>
-      </div><!-- 終点:問題文 -->
-      <div style="height: 100%; width: 20px"/><!-- 隙間 -->
-      <div class="editor"><!-- エディタ -->
-        <editor
-          v-model="content"
-          lang="ruby"
-          theme="github"
-          @init="editorInit"/>
-      </div><!-- 終点:エディタ -->
-      <div style="height: 100%; width: 20px"/><!-- 隙間 -->
-      <div class="console">
-        ここがコンソール
-      </div><!-- 終点:コンソール -->
-    </div><!-- 終点: contents -->
-    <div class="footer">
-      <button class="button prev is-light">戻る</button>
-      <div style="width: 15px"/><!-- 隙間 -->
-      <span class="question-index">3/4</span>
-      <div style="width: 15px"/><!-- 隙間 -->
-      <button class="button next is-primary">次へ</button>
-    </div><!-- 終点: footer -->
+    <div style="width: 100vw; height: 15vh"/>
+    <div class="logo">Code Climbing</div>
+    <div style="width: 100vw; height: 2vh"/>
+    <div style="width: 100vw; display: flex; justify-content: center;">
+      <img
+        src="../assets/img/logo.png"
+        style="width: 20vw; height: 100%">
+    </div>
+    <div style="width: 100vw; height: 0.5vh"/>
+    <div class="field">
+      <div class="control">
+        <input
+          v-model="name"
+          class="input is-large"
+          type="text"
+          placeholder="氏名">
+      </div>
+    </div>
+    <div style="width: 100vw; height: 0.5vh"/>
+    <div style="width: 100vw; display: flex; justify-content: center">
+      <button
+        class="button is-primary is-rounded"
+        style="height: 6vh; width: 40vw"
+        @click="doLogin">ログイン</button>
+    </div>
+    <div style="width: 100vw; height: 15vh"/>
   </div>
 </template>
 
 <script>
-import Header from '../components/Header'
+import { mapActions } from 'Vuex'
 
 export default {
-  components: {
-    editor: require('vue2-ace-editor'),
-    Header: Header
-  },
+  name: 'Index',
   data() {
     return {
-      content: ''
+      name: ''
     }
   },
   methods: {
-    editorInit() {
-      require('brace/ext/language_tools')
-      require('brace/mode/ruby')
-      require('brace/theme/github')
+    ...mapActions('users', ['login']),
+    async doLogin() {
+      try {
+        await this.login(this.name)
+        this.$router.push('/home')
+      } catch (error) {
+        console.error(error)
+      }
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style scoped lang='scss'>
 .page {
   width: 100vw;
   height: 100vh;
   display: flex;
   flex-wrap: wrap;
-}
-
-.contents {
-  height: 82vh;
-  width: 100vw;
-  display: flex;
-  flex-wrap: wrap;
-
-  .question {
-    width: 32vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    padding-left: 10px;
-    padding-top: 10px;
-
-    .textarea {
-      width: 100%;
-      height: 100%;
-      max-height: 100vh;
-    }
-  }
-
-  .editor {
-    width: 32vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    border-left: #999999 1px solid;
-    padding-left: 10px;
-    padding-top: 10px;
-  }
-
-  .console {
-    width: 32vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    border-left: #999999 1px solid;
-    padding-left: 10px;
-    padding-top: 10px;
-  }
-}
-
-.footer {
-  height: 8vh;
-  width: 100vw;
-  background-color: #444444;
-  display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0;
 
-  .question-index {
-    color: white;
+  .logo {
+    width: 100vw;
+    text-align: center;
+    font-size: 44px;
+    font-family: adelle, serif;
+    font-style: normal;
+    font-weight: bold;
+  }
+
+  input {
+    width: 40vw;
   }
 }
 </style>

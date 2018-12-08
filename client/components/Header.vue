@@ -5,26 +5,24 @@
       style="width: auto; height: 50px">
     <div style="width: 15px"/><!-- 隙間 -->
     <span class="logo">Code Climbing</span>
-    <div style="width: 50vw"/><!-- 隙間 -->
-    <span
-      v-if="showName"
-      class="nameLabel">名前</span>
+    <div style="width: 65vw"/><!-- 隙間 -->
     <div style="width: 15px"/><!-- 隙間 -->
-    <input
-      v-if="showName"
-      class="nameBox"
-      type="text"
-      placeholder="名前を入力してください">
+    <span class="nameLabel">{{ name }}</span>
   </div><!-- 終点: header -->
 </template>
 
 <script>
+import { mapGetters } from 'Vuex'
+
 export default {
   props: {
     showName: {
       default: true,
       type: Boolean
     }
+  },
+  computed: {
+    ...mapGetters('users', ['name'])
   }
 }
 </script>
@@ -48,12 +46,8 @@ export default {
   }
 
   .nameLabel {
+    font-size: 20px;
     font-family: 'Noto Sans JP', sans-serif;
-  }
-
-  .nameBox {
-    font-family: 'Noto Sans JP', sans-serif;
-    width: 20vw;
   }
 }
 </style>
