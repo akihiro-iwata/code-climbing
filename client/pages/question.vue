@@ -142,6 +142,9 @@ export default {
     })
     Opal.load('opal')
     Opal.load('opal-parser')
+    //デモ用
+    this.answers.push('Hello World')
+    this.memo = '`Hello World`と出力してください。'
   },
   methods: {
     editorInit() {
@@ -160,8 +163,6 @@ export default {
         .replace(/\[ \]/g, '<input type="checkbox">')
     },
     run() {
-      // FIXME
-      console.log('run')
       this.consoleOut = []
       const tmpjs = Opal.compile(this.answerContent)
       const console_log_org = console.log
@@ -169,6 +170,11 @@ export default {
       this.returnOut = eval(tmpjs)
       console.log = console_log_org
 
+      if (this.consoleOut[0].replace('\n', '') === 'Hello World') {
+        this.isCorrect = true
+      } else {
+        this.isFalse = true
+      }
     },
     reset() {
       this.answerContent = ''
