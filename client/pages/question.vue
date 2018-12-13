@@ -168,7 +168,6 @@ export default {
       console.log = this.output
       this.returnOut = eval(tmpjs)
       console.log = console_log_org
-
     },
     reset() {
       this.answerContent = ''
