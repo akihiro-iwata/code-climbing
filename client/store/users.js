@@ -5,30 +5,52 @@ export const state = () => ({
 })
 
 export const mutations = {
-  setUser(state, payload) {
+  SET_USER(state, payload) {
     state.loggedInUser = payload || null
   }
+}
+
+const __createInitUser = name => {
+  return {
+    active: {
+      'chapter-index': 1,
+      'question-index': 1
+    },
+    id: __uuid(),
+    name: name,
+    teacherId: 'fb1cfb60-03d1-43a7-bfa8-f9ccb8d7754c'
+  }
+}
+
+const __uuid = () => {
+  let uuid = '',
+    i,
+    random
+  for (i = 0; i < 32; i++) {
+    random = (Math.random() * 16) | 0
+    if (i == 8 || i == 12 || i == 16 || i == 20) {
+      uuid += '-'
+    }
+    uuid += (i == 12 ? 4 : i == 16 ? (random & 3) | 8 : random).toString(16)
+  }
+  return uuid
 }
 
 export const actions = {
   async login({ commit, state }, name) {
     console.log('name', name)
     try {
-      //FIXME API化
-      const usersCollection = db.collection('users')
-      const users = await usersCollection.get().then(querySnapshot => {
-        return querySnapshot.docs.map(doc => doc.data())
-      })
-      const trimedName = name.replace(/\s+/g, '')
-      const registered =
-        users.filter(user => user.name === trimedName).length !== 0
-      if (!registered) {
-        //初回利用
-        await usersCollection.add({ name: trimedName }).then(docRef => {
-          console.log('Document written with ID: ', docRef.id)
-        })
+      let users = (await db.ref('/students').once('value')).val()
+      let exists = users.filter(user => user.name === name).length !== 0
+      let myUser = {}
+      if (!exists) {
+        myUser = __createInitUser(name)
+        users.push(myUser)
+        db.ref('/students').set(users)
+      } else {
+        myUser = exists[0]
       }
-      commit('setUser', { name: trimedName })
+      commit('SET_USER', myUser)
     } catch (error) {
       console.error(error)
       throw error

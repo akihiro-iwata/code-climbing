@@ -1,15 +1,11 @@
-import firebase from 'firebase'
+import firebase from 'firebase/app'
+import 'firebase/database'
 
-const config = require('../config/code-climbling-651cc-firebase-adminsdk-8zxxo-be33d0780f')
+const config = require('../config/config.json')
 
 if (!firebase.apps.length) {
   firebase.initializeApp(config)
 }
 
-const fireStoreSetting = {
-  timestampsInSnapshots: true
-}
-
 export default firebase
-export const db = firebase.firestore()
-db.settings(fireStoreSetting)
+export const db = firebase.database()
