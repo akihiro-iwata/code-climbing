@@ -19,4 +19,8 @@ $ npm start
 $ npm run generate
 ```
 
-For detailed explanation on how things work, checkout [Nuxt.js docs](https://nuxtjs.org).
+## get config.json
+Set up json file for firebase authentication.
+
+url...`https://aiit-isa.backlog.jp/file/2018HK/config/config.json`  
+path...`config/config.json`
