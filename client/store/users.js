@@ -41,15 +41,17 @@ export const actions = {
     console.log('name', name)
     try {
       let users = (await db.ref('/students').once('value')).val()
-      let exists = users.filter(user => user.name === name).length !== 0
+      let exists = users.filter(user => user.name === name)
       let myUser = {}
-      if (!exists) {
+      if (exists.length === 0) {
         myUser = __createInitUser(name)
         users.push(myUser)
         db.ref('/students').set(users)
       } else {
         myUser = exists[0]
       }
+      console.log('exists', exists)
+      console.log('myUser', myUser)
       commit('SET_USER', myUser)
     } catch (error) {
       console.error(error)
