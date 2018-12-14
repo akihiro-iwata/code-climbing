@@ -1,7 +1,8 @@
 import { db } from '../plugins/firebase'
 
 export const state = () => ({
-  allAnswers: []
+  allAnswers: [],
+  answer: {}
 })
 
 export const mutations = {
@@ -11,6 +12,23 @@ export const mutations = {
 }
 
 export const actions = {
+  async getAnswer({ commit }, { name, chapterIndex, questionIndex }) {
+    let students = (await db.ref('/students').once('value')).val()
+    let student = {}
+    for (let s of students) {
+      if (s.name === name) student = s
+    }
+    let answer = {}
+    for (let a of student.answers) {
+      if (
+        a['chapter-index'] === chapterIndex &&
+        a['question-index'] === questionIndex
+      ) {
+        answer = a
+      }
+    }
+    console.log('answer', answer)
+  },
   async getAllAnswers({ commit }) {
     try {
       let students = (await db.ref('/students').once('value')).val()
@@ -75,5 +93,8 @@ export const actions = {
 export const getters = {
   allAnswers(state) {
     return state.allAnswers
+  },
+  answer(state) {
+    return state.answer
   }
 }

@@ -6,7 +6,7 @@ export const state = () => ({
 
 export const mutations = {
   SET_USER(state, payload) {
-    state.loggedInUser = payload || null
+    state.loggedInUser = payload || { name: 'TestUser' }
   }
 }
 
@@ -14,7 +14,7 @@ const __createInitUser = name => {
   return {
     active: {
       'chapter-index': 1,
-      'question-index': 1
+      'question-index': 0
     },
     id: __uuid(),
     name: name,
@@ -22,7 +22,7 @@ const __createInitUser = name => {
     answers: [
       {
         'chapter-index': 1,
-        'question-index': 1,
+        'question-index': 0,
         outputs: [],
         correct: false,
         source: '',
@@ -38,10 +38,10 @@ const __uuid = () => {
     random
   for (i = 0; i < 32; i++) {
     random = (Math.random() * 16) | 0
-    if (i == 8 || i == 12 || i == 16 || i == 20) {
+    if (i === 8 || i === 12 || i === 16 || i === 20) {
       uuid += '-'
     }
-    uuid += (i == 12 ? 4 : i == 16 ? (random & 3) | 8 : random).toString(16)
+    uuid += (i === 12 ? 4 : i === 16 ? (random & 3) | 8 : random).toString(16)
   }
   return uuid
 }
@@ -60,8 +60,6 @@ export const actions = {
       } else {
         myUser = exists[0]
       }
-      console.log('exists', exists)
-      console.log('myUser', myUser)
       commit('SET_USER', myUser)
     } catch (error) {
       console.error(error)

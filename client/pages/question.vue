@@ -7,7 +7,7 @@
         <div
           id="preview"
           class="preview markdown-body"
-          v-html="preview()"/>
+          v-html="preview"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
@@ -48,25 +48,40 @@
           <div style="width: 100%; height: 10px"/>
           <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
-          <input
-            v-for="answer in answers"
-            :key="answer.index"
-            :value="answer"
-            class="input"
-            type="text"
-            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px"
-            disabled>
+          <div style="width: 100%; height: 100%; background-color: #101010; color: #92fa4d; padding-left: 10px; padding-top: 10px">
+            <div
+              v-for="answer in activeQuestion.answers"
+              :key="answer.index">
+              {{ answer }}
+            </div>
+          </div>
           <div style="width: 100%; height: 10px"/>
         </div><!-- 終点:コンソール -->
       </div>
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <button class="button prev is-light">戻る</button>
+      <div style="min-width: 58px">
+        <button
+          v-if="activeQuestionIndex !== 0"
+          class="button prev is-light"
+          @click="prevQuestion">戻る</button>
+      </div>
       <div style="width: 15px"/><!-- 隙間 -->
-      <span class="question-index">3/4</span>
+      <span
+        v-if="allQuestions[0]"
+        class="question-index">
+        {{ activeQuestionIndex + 1 }} / {{ allQuestions[0].question.length }}
+      </span>
       <div style="width: 15px"/><!-- 隙間 -->
-      <button class="button next is-primary">次へ</button>
+      <div
+        v-if="allQuestions[0]"
+        style="min-width: 58px">
+        <button
+          v-if="activeQuestionIndex !== (allQuestions[0].question.length - 1)"
+          class="button next is-primary"
+          @click="nextQuestion">次へ</button>
+      </div>
     </div><!-- 終点: footer -->
 
     <div
@@ -113,6 +128,7 @@
 import marked from 'marked'
 import hljs from 'highlightjs'
 import Header from '../components/Header'
+import { mapActions, mapGetters } from 'Vuex'
 
 export default {
   components: {
@@ -130,7 +146,35 @@ export default {
       isFalse: false
     }
   },
-  created() {
+  computed: {
+    ...mapGetters('questions', [
+      'allQuestions',
+      'activeChapterIndex',
+      'activeQuestionIndex',
+      'activeQuestion'
+    ]),
+    ...mapGetters('users', ['name']),
+    preview() {
+      if (!this.activeQuestion || !this.activeQuestion.text) return ''
+      return this.renderCheckbox(marked(this.activeQuestion.text))
+    }
+  },
+  watch: {
+    async activeQuestionIndex(newVal) {
+      this.consoleOut = []
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: newVal
+      })
+      await this.getAnswer({
+        name: this.name,
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: newVal
+      })
+      console.log('activeQuestion', this.activeQuestion)
+    }
+  },
+  mounted() {
     marked.setOptions({
       gfm: true,
       breaks: true,
@@ -140,19 +184,38 @@ export default {
         return hljs.highlightAuto(code, [lang]).value
       }
     })
+  },
+  async created() {
     Opal.load('opal')
     Opal.load('opal-parser')
+    await this.getAllQuestions()
+    await this.getQuestion({
+      chapterIndex: this.activeChapterIndex,
+      questionIndex: this.activeQuestionIndex
+    })
+    await this.getAnswer({
+      name: this.name,
+      chapterIndex: this.activeChapterIndex,
+      questionIndex: this.activeQuestionIndex
+    })
+    this.memo = this.activeQuestion.text
+    console.log('activeQuestion', this.activeQuestion)
   },
   methods: {
+    ...mapActions('questions', [
+      'getAllQuestions',
+      'updateChapterIndex',
+      'updateQuestionIndex',
+      'getQuestion',
+      'nextQuestion',
+      'prevQuestion'
+    ]),
+    ...mapActions('answers', ['getAnswer']),
     editorInit() {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
       require('brace/theme/github')
       require('brace/theme/vibrant_ink')
-    },
-    preview() {
-      let html = marked(this.memo)
-      return this.renderCheckbox(html)
     },
     renderCheckbox(html) {
       return html
@@ -161,7 +224,6 @@ export default {
     },
     run() {
       // FIXME
-      console.log('run')
       this.consoleOut = []
       const tmpjs = Opal.compile(this.answerContent)
       const console_log_org = console.log
@@ -244,6 +306,8 @@ export default {
       padding-right: 10px;
       padding-top: 5px;
       word-wrap: break-word;
+      background-color: #101010;
+      color: #92fa4d;
     }
 
     .answer {

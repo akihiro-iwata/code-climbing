@@ -39,14 +39,13 @@ export default {
       name: ''
     }
   },
-  created() {
-    Opal.load('opal')
-    Opal.load('opal-parser')
-  },
   methods: {
     ...mapActions('users', ['login']),
+    ...mapActions('questions', ['updateChapterIndex', 'updateQuestionIndex']),
     async doLogin() {
       try {
+        await this.updateChapterIndex(1)
+        await this.updateQuestionIndex(0)
         await this.login(this.name)
         this.$router.push('/question')
       } catch (error) {
