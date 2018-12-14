@@ -12,108 +12,63 @@
               <th style="text-align: center">回答状況</th>
               <th style="text-align: center">回答数</th>
               <th style="text-align: center">回答時間</th>
-              <th style="text-align: center">ステータス</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="(v,k) in answers"
-              :key="k">
-              <th style="text-align: center">{{ k }}</th>
-              <th style="display: flex; height: 100%; align-items: center; min-width: 32vw">
+              v-for="answersByStudent in allAnswers"
+              :key="answersByStudent.index">
+              <th style="text-align: center">{{ answersByStudent.name }}</th>
+              <th
+                v-if="allQuestions.length !== 0"
+                style="display: flex; height: 100%; align-items: center; min-width: 32vw">
+                <!-- FIXME: 複数チャプター化をしたときは修正 -->
                 <span
-                  v-for="answer in v"
-                  :key="answer.index"
-                  :class="{success: (answer === 'ok')}"
-                  class="progressIcon"
-                  @click="goToAnswer"/>
+                  v-for="num in allQuestions[0].question.length"
+                  :key="num"
+                  :class="{success: isSuccess(1, num, answersByStudent)}"
+                  class="progressIcon"/>
               </th>
-              <th style="text-align: center">{{ v.length }}</th>
-              <th style="text-align: center">10:10</th>
-              <th style="text-align: center">回答中</th>
+              <th style="text-align: center">{{ answersByStudent.answersByChapter[1].correctCount }} / {{ questionCount(allQuestions) }}</th>
+              <th style="text-align: center">{{ Math.floor(answersByStudent.answersByChapter[1].sumTime / 60) }} 分 {{ answersByStudent.answersByChapter[1].sumTime % 60 }} 秒</th>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <div class="footer">
-      <button class="button prev is-light">戻る</button>
-      <div style="width: 15px"/><!-- 隙間 -->
-      <span class="question-index">3/4</span>
-      <div style="width: 15px"/><!-- 隙間 -->
-      <button class="button next is-primary">次へ</button>
-    </div><!-- 終点: footer -->
   </div>
 </template>
 
 <script>
 import Header from '../components/Header'
+import { mapActions, mapGetters } from 'Vuex'
 
 export default {
   components: {
     Header: Header
   },
-  data() {
-    return {
-      answers: {
-        山内麻友子: [
-          'ok',
-          'ng',
-          'skip',
-          'ok',
-          'ok',
-          'ng',
-          'ng',
-          'ok',
-          'ng',
-          'ok',
-          'ok',
-          'ng',
-          'skip'
-        ],
-        熊倉沙耶: [
-          'ok',
-          'ng',
-          'skip',
-          'ok',
-          'ok',
-          'ok',
-          'ng',
-          'skip',
-          'ok',
-          'ok',
-          'ng',
-          'ok'
-        ],
-        池田春樹: [
-          'ok',
-          'ng',
-          'skip',
-          'ok',
-          'ok',
-          'ng',
-          'ng',
-          'skip',
-          'ok',
-          'ok',
-          'ng',
-          'skip',
-          'ok',
-          'ok',
-          'ng',
-          'ok',
-          'ng',
-          'ok'
-        ]
-      }
-    }
+  computed: {
+    ...mapGetters('answers', ['allAnswers']),
+    ...mapGetters('questions', ['allQuestions'])
+  },
+  async created() {
+    await this.getAllAnswers()
+    await this.getAllQuestions()
   },
   methods: {
-    toggleEditorMode(isAnswerMode) {
-      this.isAnswerMode = isAnswerMode
-    },
+    ...mapActions('answers', ['getAllAnswers']),
+    ...mapActions('questions', ['getAllQuestions']),
     goToAnswer() {
       this.$router.push('/')
+    },
+    questionCount(questions) {
+      //FIXME indexごとに
+      if (questions.length === 0) return 0
+      return questions[0].question.length
+    },
+    isSuccess(chapterIndex, questionIndex, answersByStudent) {
+      let answers = answersByStudent.answersByChapter[chapterIndex]
+      return answers[questionIndex] && answers[questionIndex].correct
     }
   }
 }

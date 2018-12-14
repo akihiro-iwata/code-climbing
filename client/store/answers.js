@@ -1,55 +1,79 @@
 import { db } from '../plugins/firebase'
-import _ from 'lodash'
 
 export const state = () => ({
-  answersByUser: {},
-  currentCategoryId: 0,
-  currentQuestionId: 0
+  allAnswers: []
 })
 
 export const mutations = {
-  setAnswersByUser(state, payload) {
-    state.answersByUser = payload || {}
-  },
-  setCurrentCategoryId(state, payload) {
-    state.currentCategoryId = payload || 0
-  },
-  setCurrentQuestionId(state, payload) {
-    state.currentQuestionId = payload || 0
+  SET_ALL_ANSWERS(state, payload) {
+    state.allAnswers = payload || []
   }
 }
 
 export const actions = {
-  async getAnswersByUser({ commit, state }, name) {
-    const answerCollection = db.collection('answers')
-    const answers = await answerCollection.get().then(querySnapshot => {
-      return querySnapshot.docs.map(doc => doc.data())
-    })
-    const answersByUsers = answers[0].answersByUser[name] || {}
-    const answersByUsersSortByCategory = _.orderBy(
-      answersByUsers,
-      ['categoryIndex'],
-      ['asc']
-    )
-    commit('setAnswersByUser', answersByUsersSortByCategory)
-  },
-  async setCurrentCategoryAndQuestion({ commit }, categoryId, questionId) {
-    commit('setCurrentCategoryId', categoryId)
-    commit('setCurrentQuestionId', questionId)
-  },
-  async nextQuestion({ commit }) {
-    const currentQuestionId = state.currentQuestionId
-    commit('setCurrentQuestionId', questionId + 1) //FIXME 問題数の上限を考慮
-  },
-  async prevQuestion({ commit }) {
-    const currentQuestionId = state.currentQuestionId
-    const newQuestionId = currentQuestionId - 1 < 1 ? 1 : questionId - 1
-    commit('setCurrentQuestionId', newQuestionId)
+  async getAllAnswers({ commit }) {
+    try {
+      let students = (await db.ref('/students').once('value')).val()
+      let answers = students.map(student => {
+        //問題ごとに一意に
+        let data = {
+          name: student.name,
+          answersByChapter: []
+        }
+        let answersByChapter = {}
+        console.log('student', student)
+        for (let answer of student.answers) {
+          let chapterIndex = answer['chapter-index']
+          let questionIndex = answer['question-index']
+          if (!answersByChapter[chapterIndex]) {
+            answersByChapter[chapterIndex] = {}
+            answersByChapter[chapterIndex][questionIndex] = {
+              correct: answer.correct,
+              outputs: answer.output,
+              source: answer.source,
+              time: answer.time
+            }
+          } else if (!answersByChapter[chapterIndex][questionIndex]) {
+            answersByChapter[chapterIndex][questionIndex] = {
+              correct: answer.correct,
+              outputs: answer.output,
+              source: answer.source,
+              time: answer.time
+            }
+          } else {
+            let time = answersByChapter[chapterIndex][questionIndex].time
+            answersByChapter[chapterIndex][questionIndex] = {
+              correct: answer.correct,
+              outputs: answer.output,
+              source: answer.source,
+              time: time + answer.time
+            }
+          }
+        }
+        for (let k in answersByChapter) {
+          let count = 0
+          let time = 0
+          let answersByQuestion = answersByChapter[k]
+          for (let key in answersByQuestion) {
+            time += answersByQuestion[key].time
+            if (answersByQuestion[key].correct) count++
+          }
+          answersByChapter[k]['correctCount'] = count
+          answersByChapter[k]['sumTime'] = time
+        }
+        data.answersByChapter = answersByChapter
+        return data
+      })
+      commit('SET_ALL_ANSWERS', answers)
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
   }
 }
 
 export const getters = {
-  answersByUser(state) {
-    return state.answersByUser
+  allAnswers(state) {
+    return state.allAnswers
   }
 }

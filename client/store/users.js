@@ -18,7 +18,17 @@ const __createInitUser = name => {
     },
     id: __uuid(),
     name: name,
-    teacherId: 'fb1cfb60-03d1-43a7-bfa8-f9ccb8d7754c'
+    teacherId: 'fb1cfb60-03d1-43a7-bfa8-f9ccb8d7754c',
+    answers: [
+      {
+        'chapter-index': 1,
+        'question-index': 1,
+        outputs: [],
+        correct: false,
+        source: '',
+        time: 0
+      }
+    ]
   }
 }
 
