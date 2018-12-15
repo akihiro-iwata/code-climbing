@@ -101,30 +101,31 @@
             </div>
           </div><!-- 終点:コンソール -->
         </div>
-        <div
-          v-if="activeQuestion.answers"
-          class="answer">
+        <div class="answer">
           <div style="width: 100%; height: 10px"/>
           <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
-          <div style="max-height: 20vh; overflow-x: scroll">
-            <div
-              v-for="n in Object.keys(activeQuestion.answers)"
-              :key="n"
-              style="display: flex">
-              <input
-                :value="activeQuestion.answers[n]"
-                class="input"
-                type="text"
-                style="margin-left: 10px; margin-right: 10px; width: 82%; height: 44px; margin-bottom: 10px"
-                disabled>
-              <span
-                style="height: 40px; width: 40px; background-color: #eb4c64; display: flex; justify-content: center; align-items: center"
-                @click="deleteAnswer(n)">
-                <i
-                  class="fas fa-trash-alt"
-                  style="color: white; font-size: 26px; text-align: center"/>
-              </span>
+          <div v-if="activeQuestion.answers">
+            <div style="max-height: 20vh; overflow-x: scroll">
+              <div
+                v-for="n in Object.keys(activeQuestion.answers)"
+                :key="n"
+                style="display: flex">
+                <input
+                  v-if="activeQuestion.answers"
+                  :value="activeQuestion.answers[n]"
+                  class="input"
+                  type="text"
+                  style="margin-left: 10px; margin-right: 10px; width: 82%; height: 44px; margin-bottom: 10px"
+                  disabled>
+                <span
+                  style="height: 40px; width: 40px; background-color: #eb4c64; display: flex; justify-content: center; align-items: center"
+                  @click="deleteAnswer(n)">
+                  <i
+                    class="fas fa-trash-alt"
+                    style="color: white; font-size: 26px; text-align: center"/>
+                </span>
+              </div>
             </div>
           </div>
           <input
