@@ -4,16 +4,60 @@
     <div style="height: 10px; width: 100vw; background-color: #f0f0f0"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
+        <textarea
+          v-if="isEditMode"
+          v-model="question"
+          class="textarea"
+          placeholder="問題文をここに書きましょう"/>
         <div
+          v-if="!isEditMode"
           id="preview"
           class="preview markdown-body"
           v-html="preview"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+        <div style="width: 100%; height: 2vh; display: flex;">
+          <button
+            v-if="isEditMode"
+            class="button is-info"
+            @click="toPreview">
+            <span>プレビュー</span>
+          </button>
+          <button
+            v-if="!isEditMode"
+            class="button is-info"
+            @click="toEdit">
+            <span>編集</span>
+          </button>
+          <div style="height: 100%; width: 10px"/>
+          <button
+            class="button is-primary"
+            @click="save">
+            <span>保存</span>
+          </button>
+        </div>
+        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="center">
+        <div class="tabs">
+          <ul style="display: flex; justify-content: center">
+            <li
+              :class="{ 'is-active': isStubMode }"
+              @click="isStubMode = true"><a>生徒用画面</a></li>
+            <li
+              :class="{ 'is-active': !isStubMode }"
+              @click="isStubMode = false"><a>教員用画面</a></li>
+          </ul>
+        </div>
         <div class="editor"><!-- エディタ -->
           <editor
+            v-if="isStubMode"
+            v-model="stub"
+            lang="ruby"
+            theme="vibrant_ink"
+            @init="editorInit"/>
+          <editor
+            v-if="!isStubMode"
             v-model="answerContent"
             lang="ruby"
             theme="vibrant_ink"
@@ -22,13 +66,21 @@
           <div class="editorButton">
             <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
               <button
+                v-if="!isStubMode"
                 class="button is-primary"
                 @click="run">
                 <span>実行</span>
               </button>
+              <button
+                v-if="isStubMode"
+                class="button is-primary"
+                @click="save">
+                <span>保存</span>
+              </button>
             </div>
             <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
               <button
+                v-if="!isStubMode"
                 class="button is-danger"
                 @click="reset">
                 <span>リセット</span>
@@ -39,25 +91,56 @@
       </div>
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
-        <div style="margin-left: 10px; font-size: 22px">実行結果</div>
-        <div class="console">
-          <div v-if="consoleOut.length !== 0">
-            <div
-              v-for="out in consoleOut"
-              :key="out.index">{{ out }}</div>
-          </div>
-        </div><!-- 終点:コンソール -->
-        <div class="answer">
+        <div class="result">
+          <div style="padding-left: 10px; font-size: 22px; width: 100%;">実行結果</div>
+          <div class="console">
+            <div v-if="consoleOut.length !== 0">
+              <div
+                v-for="out in consoleOut"
+                :key="out.index">{{ out }}</div>
+            </div>
+          </div><!-- 終点:コンソール -->
+        </div>
+        <div
+          v-if="activeQuestion.answers"
+          class="answer">
           <div style="width: 100%; height: 10px"/>
           <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
-          <div style="width: 100%; height: 100%; background-color: #101010; color: #92fa4d; padding-left: 10px; padding-top: 10px">
+          <div style="max-height: 20vh; overflow-x: scroll">
             <div
-              v-for="answer in activeQuestion.answers"
-              :key="answer.index">
-              {{ answer }}
+              v-for="n in Object.keys(activeQuestion.answers)"
+              :key="n"
+              style="display: flex">
+              <input
+                :value="activeQuestion.answers[n]"
+                class="input"
+                type="text"
+                style="margin-left: 10px; margin-right: 10px; width: 82%; height: 44px; margin-bottom: 10px"
+                disabled>
+              <span
+                style="height: 40px; width: 40px; background-color: #eb4c64; display: flex; justify-content: center; align-items: center"
+                @click="deleteAnswer(n)">
+                <i
+                  class="fas fa-trash-alt"
+                  style="color: white; font-size: 26px; text-align: center"/>
+              </span>
             </div>
           </div>
+          <input
+            v-model="inputAnswer"
+            class="input"
+            type="text"
+            placeholder="e.g) Hello World"
+            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
+          <span
+            class="icon"
+            style="width: 100%; height: 44px; font-size: 36px">
+            <i
+              class="fas fa-plus-circle"
+              @click="addAnswer"
+            />
+          </span>
           <div style="width: 100%; height: 10px"/>
         </div><!-- 終点:コンソール -->
       </div>
@@ -68,7 +151,7 @@
         <button
           v-if="activeQuestionIndex !== 0"
           class="button prev is-light"
-          @click="prevQuestion">戻る</button>
+          @click="prev">戻る</button>
       </div>
       <div style="width: 15px"/><!-- 隙間 -->
       <span
@@ -86,53 +169,13 @@
           @click="next">次へ</button>
       </div>
     </div><!-- 終点: footer -->
-
-    <div
-      :class="{'is-active' : isCorrect }"
-      class="modal">
-      <div class="modal-background"/>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">正解です！</p>
-          <button
-            class="delete"
-            aria-label="close"
-            @click="isCorrect = false"/>
-        </header>
-        <footer class="modal-card-foot">
-          <button
-            class="button is-success"
-            @click="next">次の問題へ</button>
-          <button class="button">やめる</button>
-        </footer>
-      </div>
-    </div>
-
-    <div
-      :class="{'is-active' : isFalse }"
-      class="modal">
-      <div class="modal-background"/>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">不正解です！</p>
-          <button
-            class="delete"
-            aria-label="close"
-            @click="isFalse = false"/>
-        </header>
-        <footer class="modal-card-foot">
-          <button class="button is-danger">再トライ</button>
-        </footer>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script>
 import marked from 'marked'
 import hljs from 'highlightjs'
-import Header from '../components/Header'
+import Header from '../../components/Header'
 import { mapActions, mapGetters } from 'Vuex'
 import _ from 'lodash'
 
@@ -145,11 +188,15 @@ export default {
     return {
       answerContent: '',
       answers: [],
-      memo: '',
       consoleOut: [],
       returnOut: '',
       isCorrect: false,
-      isFalse: false
+      isFalse: false,
+      isEditMode: true,
+      question: '',
+      isStubMode: true,
+      stub: '',
+      inputAnswer: ''
     }
   },
   computed: {
@@ -161,8 +208,8 @@ export default {
     ]),
     ...mapGetters('users', ['name']),
     preview() {
-      if (!this.activeQuestion || !this.activeQuestion.text) return ''
-      return this.renderCheckbox(marked(this.activeQuestion.text))
+      if (!this.question) return ''
+      return this.renderCheckbox(marked(this.question))
     }
   },
   watch: {
@@ -178,10 +225,16 @@ export default {
         questionIndex: newVal
       })
       console.log('activeQuestion', this.activeQuestion)
-      this.answerContent = this.activeQuestion.stub
+      if (this.activeQuestion.stub) {
+        this.stub = this.activeQuestion.stub
+      }
     }
   },
   mounted() {
+    this.question = this.activeQuestion.text
+    if (this.activeQuestion.stub) {
+      this.stub = this.activeQuestion.stub
+    }
     marked.setOptions({
       gfm: true,
       breaks: true,
@@ -206,7 +259,7 @@ export default {
       chapterIndex: this.activeChapterIndex,
       questionIndex: this.activeQuestionIndex
     })
-    this.memo = this.activeQuestion.text
+    this.question = this.activeQuestion.text
     console.log('activeQuestion', this.activeQuestion)
     this.answerContent = this.activeQuestion.stub
   },
@@ -217,7 +270,10 @@ export default {
       'updateQuestionIndex',
       'getQuestion',
       'nextQuestion',
-      'prevQuestion'
+      'prevQuestion',
+      'updateQuestion',
+      'addAnswerToQuestion',
+      'removeAnswerFromQuestion'
     ]),
     ...mapActions('answers', ['getAnswer']),
     editorInit() {
@@ -233,6 +289,7 @@ export default {
     },
     async run() {
       // FIXME
+      console.log('this.answerContent', JSON.stringify(this.answerContent))
       this.consoleOut = []
       await this.sleep(100)
       const console_log_org = console.log
@@ -241,7 +298,7 @@ export default {
       if (this.activeQuestion['function-name']) {
         for (let arg of this.activeQuestion.arguments) {
           code += `\n
-        ${this.activeQuestion['function-name']}(${Object.values(arg).join()})`
+      ${this.activeQuestion['function-name']}(${Object.values(arg).join()})`
         }
       }
       try {
@@ -270,6 +327,23 @@ export default {
       this.isCorrect = false
       this.isFalse = false
       await this.nextQuestion()
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.question = this.activeQuestion.text
+    },
+    async prev() {
+      this.isCorrect = false
+      this.isFalse = false
+      await this.prevQuestion()
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.question = this.activeQuestion.text
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -277,6 +351,56 @@ export default {
           resolve()
         }, time)
       })
+    },
+    edit() {
+      console.log('edit')
+    },
+    toPreview() {
+      this.isEditMode = false
+    },
+    toEdit() {
+      this.isEditMode = true
+    },
+    async save() {
+      let params = {
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        text: this.question,
+        answers: this.activeQuestion.answers,
+        functionName: this.activeQuestion['function-name'],
+        stub: this.stub
+      }
+      await this.updateQuestion(params)
+    },
+    async addAnswer() {
+      if (!this.inputAnswer) return ''
+      let answers = Object.assign([], this.activeQuestion.answers)
+      answers.push(this.inputAnswer)
+      let params = {
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        answers: answers
+      }
+      await this.addAnswerToQuestion(params)
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.inputAnswer = ''
+    },
+    async deleteAnswer(answerIndex) {
+      await this.removeAnswerFromQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        answerIndex: answerIndex
+      })
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.inputAnswer = ''
     }
   }
 }
@@ -299,19 +423,23 @@ export default {
 
   .question {
     width: 32vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    padding-left: 10px;
-    padding-top: 10px;
+    height: 75vh;
+    min-height: 75vh;
+    border: #999999 1px solid;
+    margin-left: 0.5vw;
 
     .textarea {
       width: 100%;
-      height: 72vh;
+      height: 75vh;
     }
 
     .preview {
-      min-height: 72vh;
+      min-height: 74vh;
+      max-height: 74vh;
+      padding-left: 10px;
+      padding-right: 10px;
+      padding-top: 10px;
+      overflow-x: scroll;
     }
   }
 
@@ -334,26 +462,33 @@ export default {
 
   .right {
     width: 32vw;
-    height: 100%;
-    border: #999999 1px solid;
+    height: 82vh;
+    margin-right: 0.5vw;
     display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
     flex-wrap: wrap;
 
-    .console {
+    .result {
       width: 32vw;
-      height: 50%;
+      height: 33vh;
       border: #999999 1px solid;
-      padding-left: 10px;
-      padding-right: 10px;
-      padding-top: 5px;
-      word-wrap: break-word;
-      background-color: #101010;
-      color: #92fa4d;
+
+      .console {
+        height: 100%;
+        border: #999999 1px solid;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-top: 5px;
+        word-wrap: break-word;
+        background-color: #101010;
+        color: #92fa4d;
+      }
     }
 
     .answer {
       width: 32vw;
-      height: 35%;
+      height: 40vh;
       border: #999999 1px solid;
       margin-top: 10px;
       background-color: #f0f0f0;

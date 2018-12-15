@@ -65,6 +65,38 @@ export const actions = {
   },
   async prevQuestion({ commit }) {
     commit('PREV_QUESTION')
+  },
+  async updateQuestion(
+    { commit },
+    { chapterIndex, questionIndex, text, answers, functionName, stub }
+  ) {
+    db.ref(
+      `/teachers/0/chapters/${chapterIndex - 1}/question/${questionIndex}`
+    ).set({
+      text: text,
+      answers: answers,
+      'function-name': functionName,
+      stub: stub
+    })
+  },
+  async addAnswerToQuestion(
+    { commit },
+    { chapterIndex, questionIndex, answers }
+  ) {
+    db.ref(
+      `/teachers/0/chapters/${chapterIndex -
+        1}/question/${questionIndex}/answers`
+    ).set(answers)
+  },
+  async removeAnswerFromQuestion(
+    { commit },
+    { chapterIndex, questionIndex, answerIndex }
+  ) {
+    console.log('test')
+    db.ref(
+      `/teachers/0/chapters/${chapterIndex -
+        1}/question/${questionIndex}/answers/${answerIndex}`
+    ).remove()
   }
 }
 
