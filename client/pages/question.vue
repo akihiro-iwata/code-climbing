@@ -51,11 +51,15 @@
           <div style="width: 100%; height: 10px"/>
           <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
-          <div style="width: 100%; height: 100%; background-color: #101010; color: #92fa4d; padding-left: 10px; padding-top: 10px">
-            <div
-              v-for="answer in activeQuestion.answers"
-              :key="answer.index">
-              {{ answer }}
+          <div
+            v-if="activeQuestion.answers"
+            style="height: 24vh">
+            <div style="overflow-x: scroll; width: 100%; height: 100%; background-color: #101010; color: #92fa4d; padding-left: 10px; padding-top: 10px">
+              <div
+                v-for="n in Object.keys(activeQuestion.answers)"
+                :key="n">
+                {{ activeQuestion.answers[n] }}
+              </div>
             </div>
           </div>
           <div style="width: 100%; height: 10px"/>
@@ -68,7 +72,7 @@
         <button
           v-if="activeQuestionIndex !== 0"
           class="button prev is-light"
-          @click="prevQuestion">戻る</button>
+          @click="prev">戻る</button>
       </div>
       <div style="width: 15px"/><!-- 隙間 -->
       <span
@@ -270,6 +274,23 @@ export default {
       this.isCorrect = false
       this.isFalse = false
       await this.nextQuestion()
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.question = this.activeQuestion.text
+    },
+    async prev() {
+      this.isCorrect = false
+      this.isFalse = false
+      await this.prevQuestion()
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.question = this.activeQuestion.text
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -341,7 +362,7 @@ export default {
 
     .console {
       width: 32vw;
-      height: 50%;
+      height: 40vh;
       border: #999999 1px solid;
       padding-left: 10px;
       padding-right: 10px;
