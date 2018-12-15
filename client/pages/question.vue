@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <Header :show-name="false"/>
-    <div style="height: 10px; width: 100vw; background-color: #f5f5f5"/><!-- 隙間 -->
+    <div style="height: 10px; width: 100vw; background-color: #f0f0f0"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
         <div
@@ -254,7 +254,7 @@ export default {
   width: 100vw;
   display: flex;
   flex-wrap: wrap;
-  background-color: #f5f5f5;
+  background-color: #f0f0f0;
 
   .question {
     width: 32vw;
@@ -315,7 +315,7 @@ export default {
       height: 50%;
       border: #999999 1px solid;
       margin-top: 10px;
-      background-color: #f5f5f5;
+      background-color: #f0f0f0;
     }
   }
 }

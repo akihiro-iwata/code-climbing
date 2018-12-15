@@ -86,7 +86,7 @@ export default {
     width: 100vw;
     display: flex;
     flex-wrap: wrap;
-    background-color: #f5f5f5;
+    background-color: #f0f0f0;
 
     .title {
       height: 5vh;
