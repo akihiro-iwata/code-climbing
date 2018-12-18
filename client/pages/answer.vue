@@ -16,21 +16,20 @@
           </thead>
           <tbody>
             <tr
-              v-for="answersByStudent in allAnswers"
-              :key="answersByStudent.index">
-              <th style="text-align: center">{{ answersByStudent.name }}</th>
+              v-for="key in Object.keys(allAnswers)"
+              :key="key">
+              <th style="text-align: center">{{ allAnswers[key].name }}</th>
               <th
                 v-if="allQuestions.length !== 0"
                 style="display: flex; height: 100%; align-items: center; min-width: 32vw">
-                <!-- FIXME: 複数チャプター化をしたときは修正 -->
                 <span
                   v-for="num in allQuestions[0].question.length"
                   :key="num"
-                  :class="{success: isSuccess(1, num, answersByStudent)}"
+                  :class="{success: isSuccess(1, num, allAnswers[key])}"
                   class="progressIcon"/>
               </th>
-              <th style="text-align: center">{{ answersByStudent.answersByChapter[1].correctCount }} / {{ questionCount(allQuestions) }}</th>
-              <th style="text-align: center">{{ Math.floor(answersByStudent.answersByChapter[1].sumTime / 60) }} 分 {{ answersByStudent.answersByChapter[1].sumTime % 60 }} 秒</th>
+              <th style="text-align: center">{{ allAnswers[key].answersByChapter[1].correctCount }} / {{ questionCount(allQuestions) }}</th>
+              <th style="text-align: center">{{ Math.floor(allAnswers[key].answersByChapter[1].sumTime / 60) }} 分 {{ allAnswers[key].answersByChapter[1].sumTime % 60 }} 秒</th>
             </tr>
           </tbody>
         </table>

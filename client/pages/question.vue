@@ -20,14 +20,22 @@
             @init="editorInit"/>
           <div style="height: 10px; width: 100%"/><!-- 隙間 -->
           <div class="editorButton">
-            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
+            <div style="width: 30%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
               <button
                 class="button is-primary"
                 @click="run">
                 <span>実行</span>
               </button>
             </div>
-            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
+            <div style="width: 36%; height: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: center">
+              <div
+                v-if="isCorrect"
+                style="border: #5ecdb3 12px solid; width: 88px; height: 88px; border-radius: 50%"/>
+              <div
+                v-if="isFalse"
+                class="ng-mark"/>
+            </div>
+            <div style="width: 33%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
               <button
                 class="button is-danger"
                 @click="reset">
@@ -90,46 +98,6 @@
           @click="next">次へ</button>
       </div>
     </div><!-- 終点: footer -->
-
-    <div
-      :class="{'is-active' : isCorrect }"
-      class="modal">
-      <div class="modal-background"/>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">正解です！</p>
-          <button
-            class="delete"
-            aria-label="close"
-            @click="isCorrect = false"/>
-        </header>
-        <footer class="modal-card-foot">
-          <button
-            class="button is-success"
-            @click="next">次の問題へ</button>
-          <button class="button">やめる</button>
-        </footer>
-      </div>
-    </div>
-
-    <div
-      :class="{'is-active' : isFalse }"
-      class="modal">
-      <div class="modal-background"/>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">不正解です！</p>
-          <button
-            class="delete"
-            aria-label="close"
-            @click="isFalse = false"/>
-        </header>
-        <footer class="modal-card-foot">
-          <button class="button is-danger">再トライ</button>
-        </footer>
-      </div>
-    </div>
-
   </div>
 </template>
 
@@ -237,6 +205,8 @@ export default {
     },
     async run() {
       // FIXME
+      this.isCorrect = false
+      this.isFalse = false
       this.consoleOut = []
       await this.sleep(100)
       const console_log_org = console.log
@@ -268,11 +238,12 @@ export default {
       let answers = this.activeQuestion.answers.map(a => String(a))
       if (_.isEqual(out, answers)) {
         this.isCorrect = true
+      } else {
+        this.isFalse = true
       }
     },
     async next() {
-      this.isCorrect = false
-      this.isFalse = false
+      this.clear()
       await this.nextQuestion()
       await this.getAllQuestions()
       await this.getQuestion({
@@ -282,8 +253,7 @@ export default {
       this.question = this.activeQuestion.text
     },
     async prev() {
-      this.isCorrect = false
-      this.isFalse = false
+      this.clear()
       await this.prevQuestion()
       await this.getAllQuestions()
       await this.getQuestion({
@@ -298,6 +268,11 @@ export default {
           resolve()
         }, time)
       })
+    },
+    clear() {
+      this.isCorrect = false
+      this.isFalse = false
+      this.answerContent = ''
     }
   }
 }
@@ -394,5 +369,28 @@ export default {
   .question-index {
     color: white;
   }
+}
+.ng-mark {
+  width: 100px;
+  height: 100px;
+  position: relative;
+  cursor: pointer;
+}
+
+.ng-mark::before,
+.ng-mark::after {
+  position: absolute;
+  display: block;
+  content: '';
+  top: 50%;
+  left: 0;
+  width: 100px;
+  border-top: 12px solid #c00;
+}
+.ng-mark::before {
+  transform: rotate(-45deg);
+}
+.ng-mark::after {
+  transform: rotate(45deg);
 }
 </style>
