@@ -3,13 +3,12 @@
     <Header :show-name="false"/>
     <div style="height: 10px; width: 100vw; background-color: #f0f0f0"/><!-- 隙間 -->
     <div class="contents">
-      <div class="question"><!-- 問題文 -->
-        <div
-          id="preview"
-          class="preview markdown-body"
-          v-html="preview"/>
-        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
-      </div><!-- 終点:問題文 -->
+      <div class="question">
+        <QuestionEditor
+          v-if="activeQuestion.text"
+          :question="activeQuestion.text"
+          :is-admin-mode="false"/>
+      </div>
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="center">
         <div class="editor"><!-- エディタ -->
@@ -102,16 +101,16 @@
 </template>
 
 <script>
-import marked from 'marked'
-import hljs from 'highlightjs'
 import Header from '../components/Header'
 import { mapActions, mapGetters } from 'Vuex'
 import _ from 'lodash'
+import QuestionEditor from '../components/QuestionEditor'
 
 export default {
   components: {
     editor: require('vue2-ace-editor'),
-    Header: Header
+    Header: Header,
+    QuestionEditor: QuestionEditor
   },
   data() {
     return {
@@ -131,11 +130,7 @@ export default {
       'activeQuestionIndex',
       'activeQuestion'
     ]),
-    ...mapGetters('users', ['name', 'id']),
-    preview() {
-      if (!this.activeQuestion || !this.activeQuestion.text) return ''
-      return this.renderCheckbox(marked(this.activeQuestion.text))
-    }
+    ...mapGetters('users', ['name', 'id'])
   },
   watch: {
     async activeQuestionIndex(newVal) {
@@ -152,18 +147,6 @@ export default {
       console.log('activeQuestion', this.activeQuestion)
       this.answerContent = this.activeQuestion.stub
     }
-  },
-  mounted() {
-    marked.setOptions({
-      gfm: true,
-      breaks: true,
-      langPrefix: '',
-      fontSize: '20pt',
-      highlight: function(code, langAndTitle, callback) {
-        const lang = langAndTitle ? langAndTitle.split(':')[0] : ''
-        return hljs.highlightAuto(code, [lang]).value
-      }
-    })
   },
   async created() {
     Opal.load('opal')
@@ -304,23 +287,13 @@ export default {
   background-color: #f0f0f0;
 
   .question {
-    width: 32vw;
+    width: 30vw;
     height: 100%;
     border-top: #999999 1px solid;
     border-right: #999999 1px solid;
     padding-left: 10px;
     padding-top: 10px;
     overflow-y: scroll;
-
-    .textarea {
-      width: 100%;
-      height: 72vh;
-    }
-
-    .preview {
-      min-height: 72vh;
-      overflow-y: scroll;
-    }
   }
 
   .center {

@@ -4,37 +4,11 @@
     <div style="height: 10px; width: 100vw; background-color: #f0f0f0"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
-        <textarea
-          v-if="isEditMode"
-          v-model="question"
-          class="textarea"
-          placeholder="問題文をここに書きましょう"/>
-        <div
-          v-if="!isEditMode"
-          id="preview"
-          class="preview markdown-body"
-          v-html="preview"/>
-        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
-        <div style="width: 100%; height: 2vh; display: flex;">
-          <button
-            v-if="isEditMode"
-            class="button is-info"
-            @click="toPreview">
-            <span>プレビュー</span>
-          </button>
-          <button
-            v-if="!isEditMode"
-            class="button is-info"
-            @click="toEdit">
-            <span>編集</span>
-          </button>
-          <div style="height: 100%; width: 10px"/>
-          <button
-            class="button is-primary"
-            @click="save">
-            <span>保存</span>
-          </button>
-        </div>
+        <QuestionEditor
+          v-if="activeQuestion.text"
+          :question="activeQuestion.text"
+          :is-admin-mode="true"
+          @save="save"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
@@ -174,16 +148,16 @@
 </template>
 
 <script>
-import marked from 'marked'
-import hljs from 'highlightjs'
 import Header from '../../components/Header'
 import { mapActions, mapGetters } from 'Vuex'
 import _ from 'lodash'
+import QuestionEditor from '../../components/QuestionEditor'
 
 export default {
   components: {
     editor: require('vue2-ace-editor'),
-    Header: Header
+    Header: Header,
+    QuestionEditor: QuestionEditor
   },
   data() {
     return {
@@ -207,11 +181,7 @@ export default {
       'activeQuestionIndex',
       'activeQuestion'
     ]),
-    ...mapGetters('users', ['name']),
-    preview() {
-      if (!this.question) return ''
-      return this.renderCheckbox(marked(this.question))
-    }
+    ...mapGetters('users', ['name'])
   },
   watch: {
     async activeQuestionIndex(newVal) {
@@ -237,21 +207,16 @@ export default {
     if (this.activeQuestion.stub) {
       this.stub = this.activeQuestion.stub
     }
-    marked.setOptions({
-      gfm: true,
-      breaks: true,
-      langPrefix: '',
-      fontSize: '20pt',
-      highlight: function(code, langAndTitle, callback) {
-        const lang = langAndTitle ? langAndTitle.split(':')[0] : ''
-        return hljs.highlightAuto(code, [lang]).value
-      }
-    })
   },
   async created() {
     Opal.load('opal')
     Opal.load('opal-parser')
     await this.getAllQuestions()
+    console.log('allQuestions', this.allQuestions)
+    console.log(
+      'allQuestions.length',
+      Object.keys(this.allQuestions[0].question).length
+    )
     await this.getQuestion({
       chapterIndex: this.activeChapterIndex,
       questionIndex: this.activeQuestionIndex
@@ -283,11 +248,6 @@ export default {
       require('brace/mode/ruby')
       require('brace/theme/github')
       require('brace/theme/vibrant_ink')
-    },
-    renderCheckbox(html) {
-      return html
-        .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
-        .replace(/\[ \]/g, '<input type="checkbox">')
     },
     async run() {
       // FIXME
@@ -354,20 +314,11 @@ export default {
         }, time)
       })
     },
-    edit() {
-      console.log('edit')
-    },
-    toPreview() {
-      this.isEditMode = false
-    },
-    toEdit() {
-      this.isEditMode = true
-    },
-    async save() {
+    async save(newQuestion) {
       let params = {
         chapterIndex: this.activeChapterIndex,
         questionIndex: this.activeQuestionIndex,
-        text: this.question,
+        text: newQuestion,
         answers: this.activeQuestion.answers,
         functionName: this.activeQuestion['function-name'],
         stub: this.stub
@@ -429,20 +380,6 @@ export default {
     min-height: 75vh;
     border: #999999 1px solid;
     margin-left: 0.5vw;
-
-    .textarea {
-      width: 100%;
-      height: 75vh;
-    }
-
-    .preview {
-      min-height: 74vh;
-      max-height: 74vh;
-      padding-left: 10px;
-      padding-right: 10px;
-      padding-top: 10px;
-      overflow-x: scroll;
-    }
   }
 
   .center {
