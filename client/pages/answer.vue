@@ -66,8 +66,11 @@ export default {
       return questions[0].question.length
     },
     isSuccess(chapterIndex, questionIndex, answersByStudent) {
+      console.log('answersByStudent', answersByStudent)
       let answers = answersByStudent.answersByChapter[chapterIndex]
-      return answers[questionIndex] && answers[questionIndex].correct
+      console.log('questionIndex', questionIndex)
+      console.log('answers', answers)
+      return answers[questionIndex - 1] && answers[questionIndex - 1].correct
     }
   }
 }

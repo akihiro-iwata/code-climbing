@@ -1,12 +1,21 @@
 import { db } from '../plugins/firebase'
 
+const DEFAULT_USER_ID = '8A1A23E4-FCB0-4910-95FA-58FD0267099D'
+const DEFAULT_USER_NAME = 'テストユーザー2'
+
 export const state = () => ({
-  loggedInUser: { name: 'TestUser' }
+  loggedInUser: {
+    name: DEFAULT_USER_NAME,
+    id: DEFAULT_USER_ID
+  }
 })
 
 export const mutations = {
   SET_USER(state, payload) {
-    state.loggedInUser = payload || { name: 'TestUser' }
+    state.loggedInUser = payload || {
+      name: DEFAULT_USER_NAME,
+      id: DEFAULT_USER_ID
+    }
   }
 }
 
@@ -70,6 +79,9 @@ export const actions = {
 
 export const getters = {
   name(state) {
-    return state.loggedInUser.name || 'TestUser'
+    return state.loggedInUser.name || DEFAULT_USER_NAME
+  },
+  id(state) {
+    return state.loggedInUser.id || DEFAULT_USER_ID
   }
 }

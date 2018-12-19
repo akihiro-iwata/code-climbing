@@ -233,6 +233,7 @@ export default {
   },
   mounted() {
     this.question = this.activeQuestion.text
+    console.log('this.activeQuestion.text', this.activeQuestion.text)
     if (this.activeQuestion.stub) {
       this.stub = this.activeQuestion.stub
     }
@@ -462,7 +463,7 @@ export default {
   }
 
   .right {
-    width: 32vw;
+    width: 30vw;
     height: 82vh;
     margin-right: 0.5vw;
     display: flex;
@@ -471,7 +472,7 @@ export default {
     flex-wrap: wrap;
 
     .result {
-      width: 32vw;
+      width: 30vw;
       height: 33vh;
       border: #999999 1px solid;
 

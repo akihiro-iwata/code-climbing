@@ -131,7 +131,7 @@ export default {
       'activeQuestionIndex',
       'activeQuestion'
     ]),
-    ...mapGetters('users', ['name']),
+    ...mapGetters('users', ['name', 'id']),
     preview() {
       if (!this.activeQuestion || !this.activeQuestion.text) return ''
       return this.renderCheckbox(marked(this.activeQuestion.text))
@@ -191,7 +191,7 @@ export default {
       'nextQuestion',
       'prevQuestion'
     ]),
-    ...mapActions('answers', ['getAnswer']),
+    ...mapActions('answers', ['getAnswer', 'writeAnswer']),
     editorInit() {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
@@ -233,7 +233,7 @@ export default {
     output(msg) {
       this.consoleOut.push(msg)
     },
-    grading() {
+    async grading() {
       let out = this.consoleOut.map(o => o.replace('\n', ''))
       let answers = this.activeQuestion.answers.map(a => String(a))
       if (_.isEqual(out, answers)) {
@@ -241,6 +241,16 @@ export default {
       } else {
         this.isFalse = true
       }
+      let params = {
+        studentId: this.id,
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        correct: this.isCorrect,
+        outputs: this.consoleOut,
+        source: this.answerContent,
+        time: 30
+      }
+      await this.writeAnswer(params)
     },
     async next() {
       this.clear()
@@ -300,6 +310,7 @@ export default {
     border-right: #999999 1px solid;
     padding-left: 10px;
     padding-top: 10px;
+    overflow-y: scroll;
 
     .textarea {
       width: 100%;
@@ -308,6 +319,7 @@ export default {
 
     .preview {
       min-height: 72vh;
+      overflow-y: scroll;
     }
   }
 

@@ -12,19 +12,46 @@ export const mutations = {
 }
 
 export const actions = {
+  async writeAnswer(
+    { commit },
+    { studentId, chapterIndex, questionIndex, correct, outputs, source, time }
+  ) {
+    let students = (await db.ref('/students').once('value')).val()
+    let studentIndex = ''
+    for (let key of Object.keys(students)) {
+      if (!students[key]) continue
+      if (!students[key].id) continue
+      if (students[key].id.trim() === studentId.trim()) {
+        studentIndex = key
+      }
+    }
+    if (!studentIndex) return
+    let answerPushRef = db.ref(`/students/${studentIndex}/answers`).push()
+    await answerPushRef.set({
+      'chapter-index': chapterIndex,
+      'question-index': questionIndex,
+      correct: correct,
+      source: source,
+      outputs: outputs,
+      time: time
+    })
+  },
   async getAnswer({ commit }, { name, chapterIndex, questionIndex }) {
     let students = (await db.ref('/students').once('value')).val()
+    console.log('students', students)
     let student = {}
     for (let s of students) {
+      if (!s) continue
+      if (!s.name) continue
       if (s.name === name) student = s
     }
     let answer = {}
-    for (let a of student.answers) {
+    for (let key of Object.keys(student.answers)) {
       if (
-        a['chapter-index'] === chapterIndex &&
-        a['question-index'] === questionIndex
+        student.answers[key]['chapter-index'] === chapterIndex &&
+        student.answers[key]['question-index'] === questionIndex
       ) {
-        answer = a
+        answer = student.answers[key]
       }
     }
     console.log('answer', answer)
@@ -40,31 +67,31 @@ export const actions = {
         }
         let answersByChapter = {}
         console.log('student', student)
-        for (let answer of student.answers) {
-          let chapterIndex = answer['chapter-index']
-          let questionIndex = answer['question-index']
+        for (let key of Object.keys(student.answers)) {
+          let chapterIndex = student.answers[key]['chapter-index']
+          let questionIndex = student.answers[key]['question-index']
           if (!answersByChapter[chapterIndex]) {
             answersByChapter[chapterIndex] = {}
             answersByChapter[chapterIndex][questionIndex] = {
-              correct: answer.correct,
-              outputs: answer.output,
-              source: answer.source,
-              time: answer.time
+              correct: student.answers[key].correct,
+              outputs: student.answers[key].output,
+              source: student.answers[key].source,
+              time: student.answers[key].time
             }
           } else if (!answersByChapter[chapterIndex][questionIndex]) {
             answersByChapter[chapterIndex][questionIndex] = {
-              correct: answer.correct,
-              outputs: answer.output,
-              source: answer.source,
-              time: answer.time
+              correct: student.answers[key].correct,
+              outputs: student.answers[key].output,
+              source: student.answers[key].source,
+              time: student.answers[key].time
             }
           } else {
             let time = answersByChapter[chapterIndex][questionIndex].time
             answersByChapter[chapterIndex][questionIndex] = {
-              correct: answer.correct,
-              outputs: answer.output,
-              source: answer.source,
-              time: time + answer.time
+              correct: student.answers[key].correct,
+              outputs: student.answers[key].output,
+              source: student.answers[key].source,
+              time: time + student.answers[key].time
             }
           }
         }
