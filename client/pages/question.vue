@@ -102,7 +102,7 @@
 
 <script>
 import Header from '../components/Header'
-import { mapActions, mapGetters } from 'Vuex'
+import { mapActions, mapGetters } from 'vuex'
 import _ from 'lodash'
 import QuestionEditor from '../components/QuestionEditor'
 
