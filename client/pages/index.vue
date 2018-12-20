@@ -15,12 +15,15 @@
           v-model="name"
           class="input is-large"
           type="text"
-          placeholder="氏名">
+          placeholder="氏名"
+          @keyup.enter="doLogin"
+          @keypress="setCanDoLogin">
       </div>
     </div>
     <div style="width: 100vw; height: 0.5vh"/>
     <div style="width: 100vw; display: flex; justify-content: center">
       <button
+        :disabled="name.length === 0"
         class="button is-primary is-rounded"
         style="height: 6vh; width: 40vw"
         @click="doLogin">ログイン</button>
@@ -36,13 +39,15 @@ export default {
   name: 'Index',
   data() {
     return {
-      name: ''
+      name: '',
+      canDoLogin: false
     }
   },
   methods: {
     ...mapActions('users', ['login']),
     ...mapActions('questions', ['updateChapterIndex', 'updateQuestionIndex']),
     async doLogin() {
+      if (!this.name || !this.canDoLogin) return
       try {
         await this.updateChapterIndex(1)
         await this.updateQuestionIndex(0)
@@ -51,6 +56,9 @@ export default {
       } catch (error) {
         console.error(error)
       }
+    },
+    setCanDoLogin() {
+      this.canDoLogin = true
     }
   }
 }
