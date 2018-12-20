@@ -1,13 +1,16 @@
 <template>
   <div class="header">
-    <img
-      src="../assets/img/logo.png"
-      style="width: auto; height: 50px">
+    <div style="width: 50vw; height: 100%; display: flex; justify-content: flex-start; margin-left: 10px; align-items: center">
+      <img
+        src="../assets/img/logo.png"
+        style="width: auto; height: 50px">
+      <div style="width: 15px"/><!-- 隙間 -->
+      <span class="logo">Code Climbing</span>
+    </div>
     <div style="width: 15px"/><!-- 隙間 -->
-    <span class="logo">Code Climbing</span>
-    <div style="width: 65vw"/><!-- 隙間 -->
-    <div style="width: 15px"/><!-- 隙間 -->
-    <span class="nameLabel">{{ name }}</span>
+    <div style="width: 50vw; height: 100%; display: flex; justify-content: flex-end; margin-right: 40px; align-items: center">
+      <span class="nameLabel">{{ name }}</span>
+    </div>
   </div><!-- 終点: header -->
 </template>
 
