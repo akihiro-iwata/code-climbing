@@ -105,6 +105,7 @@ import Header from '../components/Header'
 import { mapActions, mapGetters } from 'vuex'
 import _ from 'lodash'
 import QuestionEditor from '../components/QuestionEditor'
+import RubyException from '../util/RubyException'
 
 export default {
   components: {
@@ -204,11 +205,19 @@ export default {
       try {
         const tmpjs = Opal.compile(code)
         this.returnOut = eval(tmpjs)
+        this.grading()
       } catch (e) {
-        console.log(e)
+        this.errorHandle(e)
       }
       console.log = console_log_org
-      this.grading()
+    },
+    errorHandle(e) {
+      let exception = new RubyException(
+        e,
+        this.answerContent,
+        this.activeQuestion.assistant
+      )
+      console.log(exception.message())
     },
     reset() {
       this.answerContent = ''
@@ -223,6 +232,14 @@ export default {
         this.isCorrect = true
       } else {
         this.isFalse = true
+        for (let key of Object.keys(this.activeQuestion.assistants)) {
+          let assistantAnswer = this.activeQuestion.assistants[key].answer.map(
+            a => String(a)
+          )
+          if (_.isEqual(assistantAnswer, out)) {
+            this.consoleOut.push(this.activeQuestion.assistants[key].comment)
+          }
+        }
       }
       let params = {
         studentId: this.id,

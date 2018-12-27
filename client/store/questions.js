@@ -92,10 +92,33 @@ export const actions = {
     { commit },
     { chapterIndex, questionIndex, answerIndex }
   ) {
-    console.log('test')
     db.ref(
       `/teachers/0/chapters/${chapterIndex -
         1}/question/${questionIndex}/answers/${answerIndex}`
+    ).remove()
+  },
+  async addAnswerAssistant(
+    { commit },
+    { chapterIndex, questionIndex, assistants, comment }
+  ) {
+    let pushRef = db
+      .ref(
+        `/teachers/0/chapters/${chapterIndex -
+          1}/question/${questionIndex}/assistants`
+      )
+      .push()
+    await pushRef.set({
+      answer: assistants.split(','),
+      comment: comment
+    })
+  },
+  async removeAnswerAssistant(
+    { commit },
+    { chapterIndex, questionIndex, key }
+  ) {
+    db.ref(
+      `/teachers/0/chapters/${chapterIndex -
+        1}/question/${questionIndex}/assistants/${key}`
     ).remove()
   }
 }

@@ -13,7 +13,9 @@
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="center">
-        <div class="tabs">
+        <div
+          class="tabs"
+          style="margin-bottom: 25px">
           <ul style="display: flex; justify-content: center">
             <li
               :class="{ 'is-active': isStubMode }"
@@ -65,8 +67,24 @@
       </div>
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
-        <div class="result">
-          <div style="padding-left: 10px; font-size: 22px; width: 100%;">実行結果</div>
+        <div
+          class="tabs"
+          style="width: 100%; margin-bottom: 5px">
+          <ul style="display: flex; justify-content: center">
+            <li
+              :class="{ 'is-active': (isResult && !isAnswer && !isAssistant)}"
+              @click="isResult = true; isAnswer = false; isAssistant = false"><a>実行結果</a></li>
+            <li
+              :class="{ 'is-active': (!isResult && isAnswer && !isAssistant) }"
+              @click="isAnswer = true; isResult = false; isAssistant = false"><a>正解一覧</a></li>
+            <li
+              :class="{ 'is-active': (!isResult && !isAnswer && isAssistant) }"
+              @click="isAssistant = true; isAnswer = false; isResult = false"><a>アシスタント</a></li>
+          </ul>
+        </div>
+        <div
+          v-if="isResult"
+          class="result">
           <div class="console">
             <div v-if="consoleOut.length !== 0">
               <div
@@ -75,9 +93,10 @@
             </div>
           </div><!-- 終点:コンソール -->
         </div>
-        <div class="answer">
+        <div
+          v-if="isAnswer"
+          class="answer">
           <div style="width: 100%; height: 10px"/>
-          <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
           <div v-if="activeQuestion.answers">
             <div style="max-height: 20vh; overflow-x: scroll">
@@ -114,6 +133,74 @@
             <i
               class="fas fa-plus-circle"
               @click="addAnswer"
+            />
+          </span>
+          <div style="width: 100%; height: 10px"/>
+        </div><!-- 終点:回答一覧 -->
+        <div
+          v-if="isAssistant"
+          class="assistant">
+          <div style="width: 100%; height: 10px"/>
+          <div v-if="activeQuestion.assistants">
+            <div style="max-height: 40vh; overflow-y: scroll">
+              <div
+                v-for="n in Object.keys(activeQuestion.assistants)"
+                :key="n"
+                style="display: flex; flex-wrap: wrap; justify-content: center; position: relative">
+                <div style="width: 100%; height: 10px"/>
+                <div style="width: 95%; border: #999999 1px solid; min-height: 20vh; padding: 5px">
+                  <div style="margin-left: 10px">誤答内容</div>
+                  <input
+                    v-if="activeQuestion.assistants"
+                    :value="activeQuestion.assistants[n].answer.join(',')"
+                    class="input"
+                    type="text"
+                    style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px"
+                    disabled>
+                  <div style="margin-left: 10px">コメント</div>
+                  <input
+                    v-if="activeQuestion.assistants"
+                    :value="activeQuestion.assistants[n].comment"
+                    class="input"
+                    type="text"
+                    style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px"
+                    disabled>
+                  <span
+                    class="icon"
+                    style="width: 22px; height: 22px; font-size: 33px; position: absolute; top: 20px; right: 20px;"
+                    @click="removeAssistant(n)">
+                    <i
+                      class="far fa-times-circle"
+                      style="color: red"
+                    />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="width: 100%; height: 20px"/>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center">
+            <div style="width: 95%; border: #999999 1px solid; min-height: 20vh; padding: 5px">
+              <div style="margin-left: 10px">誤答内容</div>
+              <input
+                v-model="assistantAnswer"
+                class="input"
+                type="text"
+                style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px">
+              <div style="margin-left: 10px">コメント</div>
+              <input
+                v-model="assistantComment"
+                class="input"
+                type="text"
+                style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px">
+            </div>
+          </div>
+          <span
+            class="icon"
+            style="width: 100%; height: 44px; font-size: 36px">
+            <i
+              class="fas fa-plus-circle"
+              @click="addAssistant"
             />
           </span>
           <div style="width: 100%; height: 10px"/>
@@ -171,7 +258,12 @@ export default {
       question: '',
       isStubMode: true,
       stub: '',
-      inputAnswer: ''
+      inputAnswer: '',
+      isResult: true,
+      isAnswer: false,
+      isAssistant: false,
+      assistantAnswer: '',
+      assistantComment: ''
     }
   },
   computed: {
@@ -240,7 +332,9 @@ export default {
       'prevQuestion',
       'updateQuestion',
       'addAnswerToQuestion',
-      'removeAnswerFromQuestion'
+      'removeAnswerFromQuestion',
+      'addAnswerAssistant',
+      'removeAnswerAssistant'
     ]),
     ...mapActions('answers', ['getAnswer']),
     editorInit() {
@@ -354,6 +448,34 @@ export default {
         questionIndex: this.activeQuestionIndex
       })
       this.inputAnswer = ''
+    },
+    async addAssistant() {
+      if (!this.assistantAnswer || !this.assistantComment) return ''
+      await this.addAnswerAssistant({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        assistants: this.assistantAnswer,
+        comment: this.assistantComment
+      })
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+      this.assistantAnswer = ''
+      this.assistantComment = ''
+    },
+    async removeAssistant(key) {
+      await this.removeAnswerAssistant({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        key: key
+      })
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
     }
   }
 }
@@ -404,13 +526,13 @@ export default {
     height: 82vh;
     margin-right: 0.5vw;
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
     flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
 
     .result {
       width: 30vw;
-      height: 33vh;
+      height: 72vh;
       border: #999999 1px solid;
 
       .console {
@@ -427,7 +549,15 @@ export default {
 
     .answer {
       width: 32vw;
-      height: 40vh;
+      height: 72vh;
+      border: #999999 1px solid;
+      margin-top: 10px;
+      background-color: #f0f0f0;
+    }
+
+    .assistant {
+      width: 32vw;
+      height: 72vh;
       border: #999999 1px solid;
       margin-top: 10px;
       background-color: #f0f0f0;
