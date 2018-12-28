@@ -4,7 +4,8 @@ export const state = () => ({
   allQuestions: [],
   activeChapterIndex: 1,
   activeQuestionIndex: 0,
-  activeQuestion: {}
+  activeQuestion: {},
+  teacher: {}
 })
 
 export const mutations = {
@@ -25,6 +26,9 @@ export const mutations = {
   },
   NEXT_QUESTION(state) {
     state.activeQuestionIndex = Number(state.activeQuestionIndex) + 1
+  },
+  SET_TEACHER(state, payload) {
+    state.teacher = payload || {}
   }
 }
 const TEACHER_ID = 'fb1cfb60-03d1-43a7-bfa8-f9ccb8d7754c' // FIXME
@@ -42,6 +46,7 @@ export const actions = {
   async getAllQuestions({ commit }) {
     let teacher = await __teachar(TEACHER_ID)
     commit('SET_ALL_QUESTIONS', teacher.chapters)
+    commit('SET_TEACHER', teacher)
   },
   async updateChapterIndex({ commit }, chapterIndex) {
     commit('SET_ACTIVE_CHAPTER_INDEX', chapterIndex)
@@ -49,9 +54,8 @@ export const actions = {
   async updateQuestionIndex({ commit }, questionIndex) {
     commit('SET_ACTIVE_QUESTION_INDEX', questionIndex)
   },
-  async getQuestion({ commit }, { chapterIndex, questionIndex }) {
-    let teacher = await __teachar(TEACHER_ID)
-    let chapters = teacher.chapters
+  async getQuestion({ commit, state }, { chapterIndex, questionIndex }) {
+    let chapters = state.teacher.chapters
     let questions = {}
     for (let k in chapters) {
       if (chapters[k]['chapter-index'] === chapterIndex) {

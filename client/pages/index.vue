@@ -45,12 +45,9 @@ export default {
   },
   methods: {
     ...mapActions('users', ['login']),
-    ...mapActions('questions', ['updateChapterIndex', 'updateQuestionIndex']),
     async doLogin() {
       if (!this.name || !this.canDoLogin) return
       try {
-        await this.updateChapterIndex(1)
-        await this.updateQuestionIndex(0)
         await this.login(this.name)
         this.$router.push('/home')
       } catch (error) {

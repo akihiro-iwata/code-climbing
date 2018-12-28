@@ -153,6 +153,8 @@ export default {
     Opal.load('opal')
     Opal.load('opal-parser')
     await this.getAllQuestions()
+    await this.updateChapterIndex(1)
+    await this.updateQuestionIndex(0)
     await this.getQuestion({
       chapterIndex: this.activeChapterIndex,
       questionIndex: this.activeQuestionIndex
@@ -163,7 +165,6 @@ export default {
       questionIndex: this.activeQuestionIndex
     })
     this.memo = this.activeQuestion.text
-    console.log('activeQuestion', this.activeQuestion)
     this.answerContent = this.activeQuestion.stub
   },
   methods: {
@@ -255,7 +256,6 @@ export default {
     async next() {
       this.clear()
       await this.nextQuestion()
-      await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
         questionIndex: this.activeQuestionIndex
@@ -265,7 +265,6 @@ export default {
     async prev() {
       this.clear()
       await this.prevQuestion()
-      await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
         questionIndex: this.activeQuestionIndex
