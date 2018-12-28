@@ -52,7 +52,7 @@ export default {
         await this.updateChapterIndex(1)
         await this.updateQuestionIndex(0)
         await this.login(this.name)
-        this.$router.push('/question')
+        this.$router.push('/home')
       } catch (error) {
         console.error(error)
       }
