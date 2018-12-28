@@ -50,7 +50,7 @@
               <button
                 v-if="isStubMode"
                 class="button is-primary"
-                @click="save">
+                @click="stubSave">
                 <span>保存</span>
               </button>
             </div>
@@ -380,10 +380,8 @@ export default {
       }
     },
     async next() {
-      this.isCorrect = false
-      this.isFalse = false
+      this.clear()
       await this.nextQuestion()
-      await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
         questionIndex: this.activeQuestionIndex
@@ -391,10 +389,8 @@ export default {
       this.question = this.activeQuestion.text
     },
     async prev() {
-      this.isCorrect = false
-      this.isFalse = false
+      this.clear()
       await this.prevQuestion()
-      await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
         questionIndex: this.activeQuestionIndex
@@ -408,6 +404,22 @@ export default {
         }, time)
       })
     },
+    async stubSave() {
+      let params = {
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex,
+        text: this.question,
+        answers: this.activeQuestion.answers,
+        functionName: this.activeQuestion['function-name'],
+        stub: this.stub
+      }
+      await this.updateQuestion(params)
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
+    },
     async save(newQuestion) {
       let params = {
         chapterIndex: this.activeChapterIndex,
@@ -418,6 +430,11 @@ export default {
         stub: this.stub
       }
       await this.updateQuestion(params)
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndex: this.activeQuestionIndex
+      })
     },
     async addAnswer() {
       if (!this.inputAnswer) return ''
@@ -476,6 +493,12 @@ export default {
         chapterIndex: this.activeChapterIndex,
         questionIndex: this.activeQuestionIndex
       })
+    },
+    clear() {
+      this.isCorrect = false
+      this.isFalse = false
+      this.answerContent = ''
+      this.stub = ''
     }
   }
 }
