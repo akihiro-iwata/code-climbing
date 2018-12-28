@@ -16,7 +16,7 @@
           class="input is-large"
           type="text"
           placeholder="氏名"
-          @keyup.enter="doLogin"
+          @keyup.enter="doLoginByEnter"
           @keypress="setCanDoLogin">
       </div>
     </div>
@@ -26,7 +26,7 @@
         :disabled="name.length === 0"
         class="button is-primary is-rounded"
         style="height: 6vh; width: 40vw"
-        @click="doLogin">ログイン</button>
+        @click="login">ログイン</button>
     </div>
     <div style="width: 100vw; height: 15vh"/>
   </div>
@@ -45,14 +45,17 @@ export default {
   },
   methods: {
     ...mapActions('users', ['login']),
-    async doLogin() {
-      if (!this.name || !this.canDoLogin) return
+    async login() {
       try {
         await this.login(this.name)
         this.$router.push('/home')
       } catch (error) {
         console.error(error)
       }
+    },
+    async doLoginByEnter() {
+      if (!this.name || !this.canDoLogin) return
+      await this.login()
     },
     setCanDoLogin() {
       this.canDoLogin = true
