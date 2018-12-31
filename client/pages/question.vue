@@ -86,7 +86,12 @@
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <div style="width: 33%; height: 100%"/>
+      <div style="width: 33%; height: 100%; display: flex; align-items: center">
+        <img
+          style="width: 44px  "
+          src="../assets/img/menu.png"
+          @click="goToMenu">
+      </div>
       <div
         style="width: 33%; height: 100%"
         class="footer">
@@ -397,6 +402,9 @@ export default {
       })
       await this.getAllQuestions()
       await this.prev()
+    },
+    goToMenu() {
+      this.$router.push('/home')
     }
   }
 }
