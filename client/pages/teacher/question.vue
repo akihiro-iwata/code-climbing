@@ -72,11 +72,11 @@
           style="width: 100%; margin-bottom: 5px">
           <ul style="display: flex; justify-content: center">
             <li
-              :class="{ 'is-active': (isResult && !isAnswer && !isAssistant)}"
-              @click="isResult = true; isAnswer = false; isAssistant = false"><a>実行結果</a></li>
-            <li
               :class="{ 'is-active': (!isResult && isAnswer && !isAssistant) }"
               @click="isAnswer = true; isResult = false; isAssistant = false"><a>正解一覧</a></li>
+            <li
+              :class="{ 'is-active': (isResult && !isAnswer && !isAssistant)}"
+              @click="isResult = true; isAnswer = false; isAssistant = false"><a>実行結果</a></li>
             <li
               :class="{ 'is-active': (!isResult && !isAnswer && isAssistant) }"
               @click="isAssistant = true; isAnswer = false; isResult = false"><a>アシスタント</a></li>
@@ -99,7 +99,7 @@
           <div style="width: 100%; height: 10px"/>
           <div style="width: 100%; height: 10px"/>
           <div v-if="activeQuestion.answers">
-            <div style="max-height: 20vh; overflow-x: scroll">
+            <div style="max-height: 80vh; overflow-x: scroll">
               <div
                 v-for="n in Object.keys(activeQuestion.answers)"
                 :key="n"
@@ -209,26 +209,43 @@
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <div style="min-width: 58px">
-        <button
-          v-if="activeQuestionIndex !== 0"
-          class="button prev is-light"
-          @click="prev">戻る</button>
-      </div>
-      <div style="width: 15px"/><!-- 隙間 -->
-      <span
-        v-if="allQuestions[0]"
-        class="question-index">
-        {{ activeQuestionIndex + 1 }} / {{ allQuestions[0].question.length }}
-      </span>
-      <div style="width: 15px"/><!-- 隙間 -->
+      <div style="width: 33%; height: 100%"/>
       <div
-        v-if="allQuestions[0]"
-        style="min-width: 58px">
-        <button
-          v-if="activeQuestionIndex !== (allQuestions[0].question.length - 1)"
-          class="button next is-primary"
-          @click="next">次へ</button>
+        style="width: 33%; height: 100%"
+        class="footer">
+        <div style="min-width: 58px">
+          <button
+            v-if="activeQuestionIndexNumber !== 0"
+            class="button prev is-light"
+            @click="prev">戻る</button>
+        </div>
+        <div style="width: 15px"/><!-- 隙間 -->
+        <span
+          v-if="allQuestions[0]"
+          class="question-index">
+          {{ activeQuestionIndexNumber + 1 }} / {{ questionCount }}
+        </span>
+        <div style="width: 15px"/><!-- 隙間 -->
+        <div
+          v-if="allQuestions[0]"
+          style="min-width: 58px">
+          <button
+            v-if="(activeQuestionIndexNumber + 1) !== questionCount"
+            class="button next is-primary"
+            @click="next">次へ</button>
+          <button
+            v-if="(activeQuestionIndexNumber + 1) === questionCount"
+            class="button next is-info"
+            @click="add">新規作成</button>
+        </div>
+      </div>
+      <div style="width: 33%; height: 100%; display: flex; justify-content: flex-end; align-items: center;">
+        <div style="min-width: 58px">
+          <button
+            class="button prev is-danger"
+            @click="remove">削除</button>
+        </div>
+        <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
   </div>
@@ -259,8 +276,8 @@ export default {
       isStubMode: true,
       stub: '',
       inputAnswer: '',
-      isResult: true,
-      isAnswer: false,
+      isResult: false,
+      isAnswer: true,
       isAssistant: false,
       assistantAnswer: '',
       assistantComment: ''
@@ -271,31 +288,16 @@ export default {
       'allQuestions',
       'activeChapterIndex',
       'activeQuestionIndex',
-      'activeQuestion'
+      'activeQuestion',
+      'activeQuestionIndexNumber'
     ]),
-    ...mapGetters('users', ['name'])
-  },
-  watch: {
-    async activeQuestionIndex(newVal) {
-      this.consoleOut = []
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndex: newVal
-      })
-      await this.getAnswer({
-        name: this.name,
-        chapterIndex: this.activeChapterIndex,
-        questionIndex: newVal
-      })
-      console.log('activeQuestion', this.activeQuestion)
-      if (this.activeQuestion.stub) {
-        this.stub = this.activeQuestion.stub
-      }
+    ...mapGetters('users', ['name']),
+    questionCount() {
+      return Object.keys(this.allQuestions[0].question).length - 1
     }
   },
   mounted() {
     this.question = this.activeQuestion.text
-    console.log('this.activeQuestion.text', this.activeQuestion.text)
     if (this.activeQuestion.stub) {
       this.stub = this.activeQuestion.stub
     }
@@ -304,19 +306,18 @@ export default {
     Opal.load('opal')
     Opal.load('opal-parser')
     await this.getAllQuestions()
-    console.log('allQuestions', this.allQuestions)
     console.log(
-      'allQuestions.length',
-      Object.keys(this.allQuestions[0].question).length
+      'created: this.activeQuestionIndexNumber',
+      this.activeQuestionIndexNumber
     )
     await this.getQuestion({
       chapterIndex: this.activeChapterIndex,
-      questionIndex: this.activeQuestionIndex
+      questionIndexNumber: this.activeQuestionIndexNumber
     })
     await this.getAnswer({
       name: this.name,
       chapterIndex: this.activeChapterIndex,
-      questionIndex: this.activeQuestionIndex
+      questionIndexNumber: this.activeQuestionIndexNumber
     })
     this.question = this.activeQuestion.text
     console.log('activeQuestion', this.activeQuestion)
@@ -334,7 +335,9 @@ export default {
       'addAnswerToQuestion',
       'removeAnswerFromQuestion',
       'addAnswerAssistant',
-      'removeAnswerAssistant'
+      'removeAnswerAssistant',
+      'addQuestion',
+      'removeQuestion'
     ]),
     ...mapActions('answers', ['getAnswer']),
     editorInit() {
@@ -384,18 +387,27 @@ export default {
       await this.nextQuestion()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
       this.question = this.activeQuestion.text
+      console.log(
+        'next: this.activeQuestionIndexNumber',
+        this.activeQuestionIndexNumber
+      )
     },
     async prev() {
       this.clear()
       await this.prevQuestion()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
       this.question = this.activeQuestion.text
+      console.log(
+        'prev: this.activeQuestionIndexNumber',
+        this.activeQuestionIndexNumber
+      )
+      console.log('prev: ', this.activeQuestion)
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -407,7 +419,7 @@ export default {
     async stubSave() {
       let params = {
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
         text: this.question,
         answers: this.activeQuestion.answers,
         functionName: this.activeQuestion['function-name'],
@@ -417,13 +429,13 @@ export default {
       await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndex
       })
     },
     async save(newQuestion) {
       let params = {
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
         text: newQuestion,
         answers: this.activeQuestion.answers,
         functionName: this.activeQuestion['function-name'],
@@ -433,7 +445,7 @@ export default {
       await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
     },
     async addAnswer() {
@@ -442,42 +454,47 @@ export default {
       answers.push(this.inputAnswer)
       let params = {
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
         answers: answers
       }
       await this.addAnswerToQuestion(params)
       await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
       this.inputAnswer = ''
     },
     async deleteAnswer(answerIndex) {
       await this.removeAnswerFromQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
         answerIndex: answerIndex
       })
       await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
+      console.log(
+        'this.activeQuestionIndexNumber:',
+        this.activeQuestionIndexNumber
+      )
+      console.log('this.activeQuestion', this.activeQuestion)
       this.inputAnswer = ''
     },
     async addAssistant() {
       if (!this.assistantAnswer || !this.assistantComment) return ''
       await this.addAnswerAssistant({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
         assistants: this.assistantAnswer,
         comment: this.assistantComment
       })
       await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
       this.assistantAnswer = ''
       this.assistantComment = ''
@@ -485,13 +502,13 @@ export default {
     async removeAssistant(key) {
       await this.removeAnswerAssistant({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
         key: key
       })
       await this.getAllQuestions()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
     },
     clear() {
@@ -499,6 +516,21 @@ export default {
       this.isFalse = false
       this.answerContent = ''
       this.stub = ''
+    },
+    async add() {
+      await this.addQuestion({
+        chapterIndex: this.activeChapterIndex
+      })
+      await this.getAllQuestions()
+      await this.next()
+    },
+    async remove() {
+      await this.removeQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+      await this.getAllQuestions()
+      await this.prev()
     }
   }
 }
