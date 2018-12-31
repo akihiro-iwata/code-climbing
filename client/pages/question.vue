@@ -3,12 +3,14 @@
     <Header :show-name="false"/>
     <div style="height: 10px; width: 100vw; background-color: #f0f0f0"/><!-- 隙間 -->
     <div class="contents">
-      <div class="question">
+      <div class="question"><!-- 問題文 -->
         <QuestionEditor
           v-if="activeQuestion.text"
           :question="activeQuestion.text"
-          :is-admin-mode="false"/>
-      </div>
+          :is-admin-mode="false"
+          @save="save"/>
+        <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+      </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="center">
         <div class="editor"><!-- エディタ -->
@@ -19,14 +21,14 @@
             @init="editorInit"/>
           <div style="height: 10px; width: 100%"/><!-- 隙間 -->
           <div class="editorButton">
-            <div style="width: 30%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
+            <div style="width: 33%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
               <button
                 class="button is-primary"
                 @click="run">
                 <span>実行</span>
               </button>
             </div>
-            <div style="width: 36%; height: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: center">
+            <div style="width: 33%; height: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: center">
               <div
                 v-if="isCorrect"
                 style="border: #5ecdb3 12px solid; width: 88px; height: 88px; border-radius: 50%"/>
@@ -46,55 +48,72 @@
       </div>
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
-        <div style="margin-left: 10px; font-size: 22px">実行結果</div>
-        <div class="console">
-          <div v-if="consoleOut.length !== 0">
-            <div
-              v-for="out in consoleOut"
-              :key="out.index">{{ out }}</div>
-          </div>
-        </div><!-- 終点:コンソール -->
-        <div class="answer">
+        <div
+          class="result">
+          <div style="margin-left: 10px; font-size: 22px">実行結果</div>
+          <div class="console">
+            <div v-if="consoleOut.length !== 0">
+              <div
+                v-for="out in consoleOut"
+                :key="out.index">{{ out }}</div>
+            </div>
+          </div><!-- 終点:コンソール -->
+        </div>
+        <div
+          class="answer">
           <div style="width: 100%; height: 10px"/>
           <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
-          <div
-            v-if="activeQuestion.answers"
-            style="height: 24vh">
-            <div style="overflow-x: scroll; width: 100%; height: 100%; background-color: #101010; color: #92fa4d; padding-left: 10px; padding-top: 10px">
+          <div v-if="activeQuestion.answers">
+            <div style="max-height: 80vh; overflow-x: scroll">
               <div
                 v-for="n in Object.keys(activeQuestion.answers)"
-                :key="n">
-                {{ activeQuestion.answers[n] }}
+                :key="n"
+                style="display: flex">
+                <input
+                  v-if="activeQuestion.answers"
+                  :value="activeQuestion.answers[n]"
+                  class="input"
+                  type="text"
+                  style="margin-left: 10px; margin-right: 10px; width: 95%; height: 44px; margin-bottom: 10px"
+                  disabled>
               </div>
             </div>
           </div>
           <div style="width: 100%; height: 10px"/>
-        </div><!-- 終点:コンソール -->
+        </div><!-- 終点:回答一覧 -->
       </div>
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <div style="min-width: 58px">
-        <button
-          v-if="activeQuestionIndex !== 0"
-          class="button prev is-light"
-          @click="prev">戻る</button>
-      </div>
-      <div style="width: 15px"/><!-- 隙間 -->
-      <span
-        v-if="allQuestions[0]"
-        class="question-index">
-        {{ activeQuestionIndex + 1 }} / {{ allQuestions[0].question.length }}
-      </span>
-      <div style="width: 15px"/><!-- 隙間 -->
+      <div style="width: 33%; height: 100%"/>
       <div
-        v-if="allQuestions[0]"
-        style="min-width: 58px">
-        <button
-          v-if="activeQuestionIndex !== (allQuestions[0].question.length - 1)"
-          class="button next is-primary"
-          @click="next">次へ</button>
+        style="width: 33%; height: 100%"
+        class="footer">
+        <div style="min-width: 58px">
+          <button
+            v-if="activeQuestionIndexNumber !== 0"
+            class="button prev is-light"
+            @click="prev">戻る</button>
+        </div>
+        <div style="width: 15px"/><!-- 隙間 -->
+        <span
+          v-if="allQuestions[0]"
+          class="question-index">
+          {{ activeQuestionIndexNumber + 1 }} / {{ questionCount }}
+        </span>
+        <div style="width: 15px"/><!-- 隙間 -->
+        <div
+          v-if="allQuestions[0]"
+          style="min-width: 58px">
+          <button
+            v-if="(activeQuestionIndexNumber + 1) !== questionCount"
+            class="button next is-primary"
+            @click="next">次へ</button>
+        </div>
+      </div>
+      <div style="width: 33%; height: 100%; display: flex; justify-content: flex-end; align-items: center;">
+        <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
   </div>
@@ -105,7 +124,6 @@ import Header from '../components/Header'
 import { mapActions, mapGetters } from 'vuex'
 import _ from 'lodash'
 import QuestionEditor from '../components/QuestionEditor'
-import RubyException from '../util/RubyException'
 
 export default {
   components: {
@@ -117,11 +135,18 @@ export default {
     return {
       answerContent: '',
       answers: [],
-      memo: '',
       consoleOut: [],
       returnOut: '',
       isCorrect: false,
-      isFalse: false
+      isFalse: false,
+      isEditMode: true,
+      question: '',
+      inputAnswer: '',
+      isResult: false,
+      isAnswer: true,
+      isAssistant: false,
+      assistantAnswer: '',
+      assistantComment: ''
     }
   },
   computed: {
@@ -129,42 +154,39 @@ export default {
       'allQuestions',
       'activeChapterIndex',
       'activeQuestionIndex',
-      'activeQuestion'
+      'activeQuestion',
+      'activeQuestionIndexNumber'
     ]),
-    ...mapGetters('users', ['name', 'id'])
+    ...mapGetters('users', ['name']),
+    questionCount() {
+      return Object.keys(this.allQuestions[0].question).length - 1
+    }
   },
-  watch: {
-    async activeQuestionIndex(newVal) {
-      this.consoleOut = []
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndex: newVal
-      })
-      await this.getAnswer({
-        name: this.name,
-        chapterIndex: this.activeChapterIndex,
-        questionIndex: newVal
-      })
-      console.log('activeQuestion', this.activeQuestion)
-      this.answerContent = this.activeQuestion.stub
+  mounted() {
+    this.question = this.activeQuestion.text
+    if (this.activeQuestion.stub) {
+      this.stub = this.activeQuestion.stub
     }
   },
   async created() {
     Opal.load('opal')
     Opal.load('opal-parser')
     await this.getAllQuestions()
-    await this.updateChapterIndex(1)
-    await this.updateQuestionIndex(0)
+    console.log(
+      'created: this.activeQuestionIndexNumber',
+      this.activeQuestionIndexNumber
+    )
     await this.getQuestion({
       chapterIndex: this.activeChapterIndex,
-      questionIndex: this.activeQuestionIndex
+      questionIndexNumber: this.activeQuestionIndexNumber
     })
     await this.getAnswer({
       name: this.name,
       chapterIndex: this.activeChapterIndex,
-      questionIndex: this.activeQuestionIndex
+      questionIndexNumber: this.activeQuestionIndexNumber
     })
-    this.memo = this.activeQuestion.text
+    this.question = this.activeQuestion.text
+    console.log('activeQuestion', this.activeQuestion)
     this.answerContent = this.activeQuestion.stub
   },
   methods: {
@@ -174,24 +196,25 @@ export default {
       'updateQuestionIndex',
       'getQuestion',
       'nextQuestion',
-      'prevQuestion'
+      'prevQuestion',
+      'updateQuestion',
+      'addAnswerToQuestion',
+      'removeAnswerFromQuestion',
+      'addAnswerAssistant',
+      'removeAnswerAssistant',
+      'addQuestion',
+      'removeQuestion'
     ]),
-    ...mapActions('answers', ['getAnswer', 'writeAnswer']),
+    ...mapActions('answers', ['getAnswer']),
     editorInit() {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
       require('brace/theme/github')
       require('brace/theme/vibrant_ink')
     },
-    renderCheckbox(html) {
-      return html
-        .replace(/\[x\]/g, '<input type="checkbox" checked="checked">')
-        .replace(/\[ \]/g, '<input type="checkbox">')
-    },
     async run() {
       // FIXME
-      this.isCorrect = false
-      this.isFalse = false
+      console.log('this.answerContent', JSON.stringify(this.answerContent))
       this.consoleOut = []
       await this.sleep(100)
       const console_log_org = console.log
@@ -200,25 +223,17 @@ export default {
       if (this.activeQuestion['function-name']) {
         for (let arg of this.activeQuestion.arguments) {
           code += `\n
-        ${this.activeQuestion['function-name']}(${Object.values(arg).join()})`
+    ${this.activeQuestion['function-name']}(${Object.values(arg).join()})`
         }
       }
       try {
         const tmpjs = Opal.compile(code)
         this.returnOut = eval(tmpjs)
-        this.grading()
       } catch (e) {
-        this.errorHandle(e)
+        console.log(e)
       }
       console.log = console_log_org
-    },
-    errorHandle(e) {
-      let exception = new RubyException(
-        e,
-        this.answerContent,
-        this.activeQuestion.assistant
-      )
-      console.log(exception.message())
+      this.grading()
     },
     reset() {
       this.answerContent = ''
@@ -226,39 +241,23 @@ export default {
     output(msg) {
       this.consoleOut.push(msg)
     },
-    async grading() {
+    grading() {
+      this.isCorrect = false
+      this.isFalse = false
       let out = this.consoleOut.map(o => o.replace('\n', ''))
       let answers = this.activeQuestion.answers.map(a => String(a))
       if (_.isEqual(out, answers)) {
         this.isCorrect = true
       } else {
         this.isFalse = true
-        for (let key of Object.keys(this.activeQuestion.assistants)) {
-          let assistantAnswer = this.activeQuestion.assistants[key].answer.map(
-            a => String(a)
-          )
-          if (_.isEqual(assistantAnswer, out)) {
-            this.consoleOut.push(this.activeQuestion.assistants[key].comment)
-          }
-        }
       }
-      let params = {
-        studentId: this.id,
-        chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex,
-        correct: this.isCorrect,
-        outputs: this.consoleOut,
-        source: this.answerContent,
-        time: 30
-      }
-      await this.writeAnswer(params)
     },
     async next() {
       this.clear()
       await this.nextQuestion()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
       this.question = this.activeQuestion.text
     },
@@ -267,9 +266,14 @@ export default {
       await this.prevQuestion()
       await this.getQuestion({
         chapterIndex: this.activeChapterIndex,
-        questionIndex: this.activeQuestionIndex
+        questionIndexNumber: this.activeQuestionIndexNumber
       })
       this.question = this.activeQuestion.text
+      console.log(
+        'prev: this.activeQuestionIndexNumber',
+        this.activeQuestionIndexNumber
+      )
+      console.log('prev: ', this.activeQuestion)
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -278,10 +282,121 @@ export default {
         }, time)
       })
     },
+    async stubSave() {
+      let params = {
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
+        text: this.question,
+        answers: this.activeQuestion.answers,
+        functionName: this.activeQuestion['function-name'],
+        stub: this.stub
+      }
+      await this.updateQuestion(params)
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndex
+      })
+    },
+    async save(newQuestion) {
+      let params = {
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
+        text: newQuestion,
+        answers: this.activeQuestion.answers,
+        functionName: this.activeQuestion['function-name'],
+        stub: this.stub
+      }
+      await this.updateQuestion(params)
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+    },
+    async addAnswer() {
+      if (!this.inputAnswer) return ''
+      let answers = Object.assign([], this.activeQuestion.answers)
+      answers.push(this.inputAnswer)
+      let params = {
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
+        answers: answers
+      }
+      await this.addAnswerToQuestion(params)
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+      this.inputAnswer = ''
+    },
+    async deleteAnswer(answerIndex) {
+      await this.removeAnswerFromQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
+        answerIndex: answerIndex
+      })
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+      console.log(
+        'this.activeQuestionIndexNumber:',
+        this.activeQuestionIndexNumber
+      )
+      console.log('this.activeQuestion', this.activeQuestion)
+      this.inputAnswer = ''
+    },
+    async addAssistant() {
+      if (!this.assistantAnswer || !this.assistantComment) return ''
+      await this.addAnswerAssistant({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
+        assistants: this.assistantAnswer,
+        comment: this.assistantComment
+      })
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+      this.assistantAnswer = ''
+      this.assistantComment = ''
+    },
+    async removeAssistant(key) {
+      await this.removeAnswerAssistant({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber,
+        key: key
+      })
+      await this.getAllQuestions()
+      await this.getQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+    },
     clear() {
       this.isCorrect = false
       this.isFalse = false
       this.answerContent = ''
+      this.stub = ''
+    },
+    async add() {
+      await this.addQuestion({
+        chapterIndex: this.activeChapterIndex
+      })
+      await this.getAllQuestions()
+      await this.next()
+    },
+    async remove() {
+      await this.removeQuestion({
+        chapterIndex: this.activeChapterIndex,
+        questionIndexNumber: this.activeQuestionIndexNumber
+      })
+      await this.getAllQuestions()
+      await this.prev()
     }
   }
 }
@@ -303,13 +418,11 @@ export default {
   background-color: #f0f0f0;
 
   .question {
-    width: 30vw;
-    height: 100%;
-    border-top: #999999 1px solid;
-    border-right: #999999 1px solid;
-    padding-left: 10px;
-    padding-top: 10px;
-    overflow-y: scroll;
+    width: 32vw;
+    height: 75vh;
+    min-height: 75vh;
+    border: #999999 1px solid;
+    margin-left: 0.5vw;
   }
 
   .center {
@@ -330,27 +443,35 @@ export default {
   }
 
   .right {
-    width: 32vw;
-    height: 100%;
-    border: #999999 1px solid;
+    width: 30vw;
+    height: 82vh;
+    margin-right: 0.5vw;
     display: flex;
     flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
 
-    .console {
-      width: 32vw;
-      height: 40vh;
+    .result {
+      width: 30vw;
+      height: 37vh;
       border: #999999 1px solid;
-      padding-left: 10px;
-      padding-right: 10px;
-      padding-top: 5px;
-      word-wrap: break-word;
-      background-color: #101010;
-      color: #92fa4d;
+
+      .console {
+        height: 100%;
+        border: #999999 1px solid;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-top: 5px;
+        word-wrap: break-word;
+        background-color: #101010;
+        color: #92fa4d;
+      }
     }
 
     .answer {
       width: 32vw;
-      height: 35%;
+      height: 37vh;
+      overflow-y: scroll;
       border: #999999 1px solid;
       margin-top: 10px;
       background-color: #f0f0f0;
@@ -371,6 +492,7 @@ export default {
     color: white;
   }
 }
+
 .ng-mark {
   width: 100px;
   height: 100px;
