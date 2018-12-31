@@ -7,7 +7,7 @@
         @click="goToAnswer">
         <div class="content">
           <div class="thumbnail">
-            <img src="../assets/img/logo.png">
+            <img src="../assets/img/school-bus.png">
           </div>
           <div style="width: 100%; height: 10px"/>
           <span class="label">練習問題を解く</span>
@@ -19,7 +19,7 @@
         @click="goToChallenge">
         <div class="content">
           <div class="thumbnail">
-            <img src="../assets/img/logo.png">
+            <img src="../assets/img/boxing.png">
           </div>
           <div style="width: 100%; height: 10px"/>
           <span class="label">みんなの問題を解く</span>
@@ -31,7 +31,7 @@
         @click="goToCreate">
         <div class="content">
           <div class="thumbnail">
-            <img src="../assets/img/logo.png">
+            <img src="../assets/img/tools.png">
           </div>
           <div style="width: 100%; height: 10px"/>
           <span class="label">問題を作る</span>
