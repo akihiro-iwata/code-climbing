@@ -31,16 +31,18 @@ export const mutations = {
   PREV_QUESTION(state) {
     state.activeQuestionIndexNumber =
       Number(state.activeQuestionIndexNumber) - 1
-    state.activeQuestionIndex = Object.keys(state.allQuestions)[
-      state.activeQuestionIndexNumber
-    ]
+    let chapters = state.allQuestions
+    let questions = __questions(chapters, state.activeChapterIndex)
+    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
+    state.activeQuestionIndex = questionIndex
   },
   NEXT_QUESTION(state) {
     state.activeQuestionIndexNumber =
       Number(state.activeQuestionIndexNumber) + 1
-    state.activeQuestionIndex = Object.keys(state.allQuestions)[
-      state.activeQuestionIndexNumber
-    ]
+    let chapters = state.allQuestions
+    let questions = __questions(chapters, state.activeChapterIndex)
+    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
+    state.activeQuestionIndex = questionIndex
   },
   SET_TEACHER(state, payload) {
     state.teacher = payload || {}
@@ -69,29 +71,35 @@ const __questions = (chapters, chapterIndex) => {
   return questions
 }
 
-const __tutorialUrl = (chapterIndex, questionIndex) => {
-  if (questionIndex)
-    return `/teachers/0/chapters/${chapterIndex - 1}/question/${questionIndex}`
-  return `/teachers/0/chapters/${chapterIndex - 1}/question`
-}
-
-const __challengeUrl = schoolId => {
-  return `/schools/${schoolId}/challenges`
-}
-
-const __dbUrl = state => {
-  if (state.challengeMode)
-    return `/schools/${state.schoolId}/challenges/${state.activeQuestionIndex}`
-
-  return `/teachers/0/chapters/
-    ${state.activeChapterIndex - 1}/question/${state.activeQuestionIndex}`
+const __dbRefUrl = (state, addMode) => {
+  console.log('state.challengeMode', state.challengeMode)
+  if (state.challengeMode) {
+    if (addMode)
+      return `/schools/0/challenges/${state.activeChapterIndex - 1}/question`
+    return `/schools/0/challenges/${state.activeChapterIndex - 1}/question/${
+      state.activeQuestionIndex
+    }`
+  } else {
+    if (addMode)
+      return `/teachers/0/chapters/${state.activeChapterIndex - 1}/question`
+    return `/teachers/0/chapters/${state.activeChapterIndex - 1}/question/${
+      state.activeQuestionIndex
+    }`
+  }
 }
 
 export const actions = {
   async getAllQuestions({ commit, state }) {
-    let teacher = await __teachar(state)
-    commit('SET_ALL_QUESTIONS', teacher.chapters)
-    commit('SET_TEACHER', teacher)
+    if (state.challengeMode) {
+      let questions = (await db
+        .ref('/schools/0/challenges')
+        .once('value')).val()
+      commit('SET_ALL_QUESTIONS', questions)
+    } else {
+      let teacher = await __teachar(state)
+      commit('SET_ALL_QUESTIONS', teacher.chapters)
+      commit('SET_TEACHER', teacher)
+    }
   },
   async updateChapterIndex({ commit }, chapterIndex) {
     commit('SET_ACTIVE_CHAPTER_INDEX', chapterIndex)
@@ -100,10 +108,11 @@ export const actions = {
     commit('SET_ACTIVE_QUESTION_INDEX', questionIndex)
   },
   async getQuestion({ commit, state }) {
-    let chapters = state.teacher.chapters
-    let questions = __questions(chapters, state.activeChapterIndex)
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    commit('SET_ACTIVE_QUESTION', questions[questionIndex])
+    let questions = __questions(state.allQuestions, state.activeChapterIndex)
+    console.log('questions', questions)
+    console.log('state.activeChapterIndex', state.activeChapterIndex)
+    console.log('state.activeQuestionIndex', state.activeQuestionIndex)
+    commit('SET_ACTIVE_QUESTION', questions[state.activeQuestionIndex])
   },
   async nextQuestion({ commit, dispatch }) {
     commit('NEXT_QUESTION')
@@ -114,7 +123,7 @@ export const actions = {
     await dispatch('getQuestion')
   },
   async addQuestion({ commit, dispatch, state }) {
-    let pushRef = db.ref(__tutorialUrl(state.activeChapterIndex) + '/').push()
+    let pushRef = db.ref(__dbRefUrl(state, true) + '/').push()
     await pushRef.set({
       text: '問題文を書きましょう',
       answers: [],
@@ -124,22 +133,14 @@ export const actions = {
     await dispatch('getAllQuestions')
   },
   async removeQuestion({ commit, state, dispatch }) {
-    let chapters = state.teacher.chapters
-    let questions = __questions(chapters, state.activeChapterIndex)
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    db.ref(__tutorialUrl(state.activeChapterIndex, questionIndex)).remove()
+    db.ref(__dbRefUrl(state)).remove()
     await dispatch('getAllQuestions')
   },
   async updateQuestion(
     { commit, state, dispatch },
     { text, answers, functionName, stub }
   ) {
-    let questions = __questions(
-      state.teacher.chapters,
-      state.activeChapterIndex
-    )
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    db.ref(__tutorialUrl(state.activeChapterIndex, questionIndex)).set({
+    db.ref(__dbRefUrl(state)).set({
       text: text,
       answers: answers,
       'function-name': functionName,
@@ -148,27 +149,12 @@ export const actions = {
     await dispatch('getAllQuestions')
   },
   async addAnswerToQuestion({ commit, state, dispatch }, { answers }) {
-    let questions = __questions(
-      state.teacher.chapters,
-      state.activeChapterIndex
-    )
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    db.ref(
-      __tutorialUrl(state.activeChapterIndex, questionIndex) + '/answers'
-    ).set(answers)
+    db.ref(__dbRefUrl(state) + '/answers').set(answers)
     await dispatch('getAllQuestions')
     await dispatch('getQuestion')
   },
   async removeAnswerFromQuestion({ commit, state, dispatch }, { answerIndex }) {
-    let questions = __questions(
-      state.teacher.chapters,
-      state.activeChapterIndex
-    )
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    db.ref(
-      __tutorialUrl(state.activeChapterIndex, questionIndex) +
-        `/answers/${answerIndex}`
-    ).remove()
+    db.ref(__dbRefUrl(state) + `/answers/${answerIndex}`).remove()
     await dispatch('getAllQuestions')
     await dispatch('getQuestion')
   },
@@ -176,16 +162,7 @@ export const actions = {
     { commit, state, dispatch },
     { assistants, comment }
   ) {
-    let questions = __questions(
-      state.teacher.chapters,
-      state.activeChapterIndex
-    )
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    let pushRef = db
-      .ref(
-        __tutorialUrl(state.activeChapterIndex, questionIndex) + '/assistants'
-      )
-      .push()
+    let pushRef = db.ref(__dbRefUrl(state) + '/assistants').push()
     await pushRef.set({
       answer: assistants.split(','),
       comment: comment
@@ -194,15 +171,7 @@ export const actions = {
     await dispatch('getQuestion')
   },
   async removeAnswerAssistant({ commit, state, dispatch }, { key }) {
-    let questions = __questions(
-      state.teacher.chapters,
-      state.activeChapterIndex
-    )
-    let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
-    db.ref(
-      __tutorialUrl(state.activeChapterIndex, questionIndex) +
-        `/assistants/${key}`
-    ).remove()
+    db.ref(__dbRefUrl(state) + `/assistants/${key}`).remove()
     await dispatch('getAllQuestions')
     await dispatch('getQuestion')
   },

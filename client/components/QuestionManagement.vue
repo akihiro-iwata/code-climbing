@@ -7,36 +7,56 @@
         <QuestionEditor
           v-if="activeQuestion.text"
           :question="activeQuestion.text"
-          :is-admin-mode="false"/>
+          :is-admin-mode="true"
+          @save="save"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="center">
+        <div
+          class="tabs"
+          style="margin-bottom: 25px">
+          <ul style="display: flex; justify-content: center">
+            <li
+              :class="{ 'is-active': isStubMode }"
+              @click="isStubMode = true"><a>生徒用画面</a></li>
+            <li
+              :class="{ 'is-active': !isStubMode }"
+              @click="isStubMode = false"><a>教員用画面</a></li>
+          </ul>
+        </div>
         <div class="editor"><!-- エディタ -->
           <editor
+            v-if="isStubMode"
+            v-model="stub"
+            lang="ruby"
+            theme="vibrant_ink"
+            @init="editorInit"/>
+          <editor
+            v-if="!isStubMode"
             v-model="answerContent"
             lang="ruby"
             theme="vibrant_ink"
             @init="editorInit"/>
           <div style="height: 10px; width: 100%"/><!-- 隙間 -->
           <div class="editorButton">
-            <div style="width: 33%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
+            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start">
               <button
+                v-if="!isStubMode"
                 class="button is-primary"
                 @click="run">
                 <span>実行</span>
               </button>
-            </div>
-            <div style="width: 33%; height: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: center">
-              <div
-                v-if="isCorrect"
-                style="border: #5ecdb3 12px solid; width: 88px; height: 88px; border-radius: 50%"/>
-              <div
-                v-if="isFalse"
-                class="ng-mark"/>
-            </div>
-            <div style="width: 33%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
               <button
+                v-if="isStubMode"
+                class="button is-primary"
+                @click="save(activeQuestion.text)">
+                <span>保存</span>
+              </button>
+            </div>
+            <div style="width: 50%; height: 100%; display: flex; flex-wrap: wrap; justify-content: flex-end">
+              <button
+                v-if="!isStubMode"
                 class="button is-danger"
                 @click="reset">
                 <span>リセット</span>
@@ -48,8 +68,23 @@
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="right">
         <div
+          class="tabs"
+          style="width: 100%; margin-bottom: 5px">
+          <ul style="display: flex; justify-content: center">
+            <li
+              :class="{ 'is-active': (!isResult && isAnswer && !isAssistant) }"
+              @click="isAnswer = true; isResult = false; isAssistant = false"><a>正解一覧</a></li>
+            <li
+              :class="{ 'is-active': (isResult && !isAnswer && !isAssistant)}"
+              @click="isResult = true; isAnswer = false; isAssistant = false"><a>実行結果</a></li>
+            <li
+              :class="{ 'is-active': (!isResult && !isAnswer && isAssistant) }"
+              @click="isAssistant = true; isAnswer = false; isResult = false"><a>アシスタント</a></li>
+          </ul>
+        </div>
+        <div
+          v-if="isResult"
           class="result">
-          <div style="margin-left: 10px; font-size: 22px">実行結果</div>
           <div class="console">
             <div v-if="consoleOut.length !== 0">
               <div
@@ -59,9 +94,9 @@
           </div><!-- 終点:コンソール -->
         </div>
         <div
+          v-if="isAnswer"
           class="answer">
           <div style="width: 100%; height: 10px"/>
-          <div style="margin-left: 10px; font-size: 22px">正解</div>
           <div style="width: 100%; height: 10px"/>
           <div v-if="activeQuestion.answers">
             <div style="max-height: 80vh; overflow-x: scroll">
@@ -74,23 +109,107 @@
                   :value="activeQuestion.answers[n]"
                   class="input"
                   type="text"
-                  style="margin-left: 10px; margin-right: 10px; width: 95%; height: 44px; margin-bottom: 10px"
+                  style="margin-left: 10px; margin-right: 10px; width: 82%; height: 44px; margin-bottom: 10px"
                   disabled>
+                <span
+                  style="height: 40px; width: 40px; background-color: #eb4c64; display: flex; justify-content: center; align-items: center"
+                  @click="deleteAnswer(n)">
+                  <i
+                    class="fas fa-trash-alt"
+                    style="color: white; font-size: 26px; text-align: center"/>
+                </span>
               </div>
             </div>
           </div>
+          <input
+            v-model="inputAnswer"
+            class="input"
+            type="text"
+            placeholder="e.g) Hello World"
+            style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
+          <span
+            class="icon"
+            style="width: 100%; height: 44px; font-size: 36px">
+            <i
+              class="fas fa-plus-circle"
+              @click="addAnswer"
+            />
+          </span>
           <div style="width: 100%; height: 10px"/>
         </div><!-- 終点:回答一覧 -->
+        <div
+          v-if="isAssistant"
+          class="assistant">
+          <div style="width: 100%; height: 10px"/>
+          <div v-if="activeQuestion.assistants">
+            <div style="max-height: 40vh; overflow-y: scroll">
+              <div
+                v-for="n in Object.keys(activeQuestion.assistants)"
+                :key="n"
+                style="display: flex; flex-wrap: wrap; justify-content: center; position: relative">
+                <div style="width: 100%; height: 10px"/>
+                <div style="width: 95%; border: #999999 1px solid; min-height: 20vh; padding: 5px">
+                  <div style="margin-left: 10px">誤答内容</div>
+                  <input
+                    v-if="activeQuestion.assistants"
+                    :value="activeQuestion.assistants[n].answer.join(',')"
+                    class="input"
+                    type="text"
+                    style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px"
+                    disabled>
+                  <div style="margin-left: 10px">コメント</div>
+                  <input
+                    v-if="activeQuestion.assistants"
+                    :value="activeQuestion.assistants[n].comment"
+                    class="input"
+                    type="text"
+                    style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px"
+                    disabled>
+                  <span
+                    class="icon"
+                    style="width: 22px; height: 22px; font-size: 33px; position: absolute; top: 20px; right: 20px;"
+                    @click="removeAssistant(n)">
+                    <i
+                      class="far fa-times-circle"
+                      style="color: red"
+                    />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="width: 100%; height: 20px"/>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center">
+            <div style="width: 95%; border: #999999 1px solid; min-height: 20vh; padding: 5px">
+              <div style="margin-left: 10px">誤答内容</div>
+              <input
+                v-model="assistantAnswer"
+                class="input"
+                type="text"
+                style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px">
+              <div style="margin-left: 10px">コメント</div>
+              <input
+                v-model="assistantComment"
+                class="input"
+                type="text"
+                style="margin-left: 10px; margin-right: 10px; width: 90%; height: 44px; margin-bottom: 10px">
+            </div>
+          </div>
+          <span
+            class="icon"
+            style="width: 100%; height: 44px; font-size: 36px">
+            <i
+              class="fas fa-plus-circle"
+              @click="addAssistant"
+            />
+          </span>
+          <div style="width: 100%; height: 10px"/>
+        </div><!-- 終点:コンソール -->
       </div>
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <div style="width: 33%; height: 100%; display: flex; align-items: center">
-        <img
-          style="width: 44px  "
-          src="../assets/img/menu.png"
-          @click="goToMenu">
-      </div>
+      <div style="width: 33%; height: 100%"/>
       <div
         style="width: 33%; height: 100%"
         class="footer">
@@ -114,9 +233,18 @@
             v-if="(activeQuestionIndexNumber + 1) !== questionCount"
             class="button next is-primary"
             @click="next">次へ</button>
+          <button
+            v-if="(activeQuestionIndexNumber + 1) === questionCount"
+            class="button next is-info"
+            @click="add">新規作成</button>
         </div>
       </div>
       <div style="width: 33%; height: 100%; display: flex; justify-content: flex-end; align-items: center;">
+        <div style="min-width: 58px">
+          <button
+            class="button prev is-danger"
+            @click="remove">削除</button>
+        </div>
         <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
@@ -151,6 +279,8 @@ export default {
       isFalse: false,
       isEditMode: true,
       question: '',
+      isStubMode: true,
+      stub: '',
       inputAnswer: '',
       isResult: false,
       isAnswer: true,
@@ -185,14 +315,17 @@ export default {
       await this.changeMode({ isChallengeMode: true })
     }
     await this.getAllQuestions()
-    await this.getQuestion()
+    await this.getQuestion({
+      chapterIndex: this.activeChapterIndex,
+      questionIndexNumber: this.activeQuestionIndexNumber
+    })
     await this.getAnswer({
       name: this.name,
       chapterIndex: this.activeChapterIndex,
       questionIndexNumber: this.activeQuestionIndexNumber
     })
     this.question = this.activeQuestion.text
-    this.answerContent = this.activeQuestion.stub
+    this.stub = this.activeQuestion.stub
   },
   methods: {
     ...mapActions('questions', [
@@ -229,7 +362,7 @@ export default {
       if (this.activeQuestion['function-name']) {
         for (let arg of this.activeQuestion.arguments) {
           code += `\n
-  ${this.activeQuestion['function-name']}(${Object.values(arg).join()})`
+    ${this.activeQuestion['function-name']}(${Object.values(arg).join()})`
         }
       }
       try {
@@ -248,14 +381,10 @@ export default {
       this.consoleOut.push(msg)
     },
     grading() {
-      this.isCorrect = false
-      this.isFalse = false
       let out = this.consoleOut.map(o => o.replace('\n', ''))
       let answers = this.activeQuestion.answers.map(a => String(a))
       if (_.isEqual(out, answers)) {
         this.isCorrect = true
-      } else {
-        this.isFalse = true
       }
     },
     async next() {
@@ -266,9 +395,7 @@ export default {
     },
     async prev() {
       this.clear()
-      await this.prevQuestion({
-        chapterIndex: this.activeChapterIndex
-      })
+      await this.prevQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
     },
@@ -278,6 +405,40 @@ export default {
           resolve()
         }, time)
       })
+    },
+    async save(newQuestion) {
+      let questionText =
+        newQuestion !== MouseEvent ? newQuestion : this.activeQuestion.text
+      let params = {
+        text: questionText,
+        answers: this.activeQuestion.answers,
+        functionName: this.activeQuestion['function-name'],
+        stub: this.stub
+      }
+      await this.updateQuestion(params)
+    },
+    async addAnswer() {
+      if (!this.inputAnswer) return ''
+      let answers = Object.assign([], this.activeQuestion.answers)
+      answers.push(this.inputAnswer)
+      await this.addAnswerToQuestion({ answers: answers })
+      this.inputAnswer = ''
+    },
+    async deleteAnswer(answerIndex) {
+      await this.removeAnswerFromQuestion({ answerIndex: answerIndex })
+      this.inputAnswer = ''
+    },
+    async addAssistant() {
+      if (!this.assistantAnswer || !this.assistantComment) return ''
+      await this.addAnswerAssistant({
+        assistants: this.assistantAnswer,
+        comment: this.assistantComment
+      })
+      this.assistantAnswer = ''
+      this.assistantComment = ''
+    },
+    async removeAssistant(key) {
+      await this.removeAnswerAssistant({ key: key })
     },
     clear() {
       this.isCorrect = false
@@ -292,9 +453,6 @@ export default {
     async remove() {
       await this.removeQuestion()
       await this.prev()
-    },
-    goToMenu() {
-      this.$router.push('/home')
     }
   }
 }
@@ -351,7 +509,7 @@ export default {
 
     .result {
       width: 30vw;
-      height: 37vh;
+      height: 72vh;
       border: #999999 1px solid;
 
       .console {
@@ -368,8 +526,15 @@ export default {
 
     .answer {
       width: 32vw;
-      height: 37vh;
-      overflow-y: scroll;
+      height: 72vh;
+      border: #999999 1px solid;
+      margin-top: 10px;
+      background-color: #f0f0f0;
+    }
+
+    .assistant {
+      width: 32vw;
+      height: 72vh;
       border: #999999 1px solid;
       margin-top: 10px;
       background-color: #f0f0f0;
@@ -389,29 +554,5 @@ export default {
   .question-index {
     color: white;
   }
-}
-
-.ng-mark {
-  width: 100px;
-  height: 100px;
-  position: relative;
-  cursor: pointer;
-}
-
-.ng-mark::before,
-.ng-mark::after {
-  position: absolute;
-  display: block;
-  content: '';
-  top: 50%;
-  left: 0;
-  width: 100px;
-  border-top: 12px solid #c00;
-}
-.ng-mark::before {
-  transform: rotate(-45deg);
-}
-.ng-mark::after {
-  transform: rotate(45deg);
 }
 </style>
