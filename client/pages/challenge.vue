@@ -12,7 +12,7 @@ export default {
   },
   async created() {
     await this.changeMode({
-      isChallengeMode: false
+      isChallengeMode: true
     })
   },
   methods: {
