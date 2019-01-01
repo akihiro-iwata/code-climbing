@@ -28,10 +28,6 @@ export const mutations = {
     state.activeQuestionIndex = Object.keys(state.allQuestions)[
       state.activeQuestionIndexNumber
     ]
-    console.log(
-      'prev: state.activeQuestionIndexNumber',
-      state.activeQuestionIndexNumber
-    )
   },
   NEXT_QUESTION(state) {
     state.activeQuestionIndexNumber =
@@ -83,13 +79,21 @@ export const actions = {
     let questionIndex = Object.keys(questions)[questionIndexNumber]
     commit('SET_ACTIVE_QUESTION', questions[questionIndex])
   },
-  async nextQuestion({ commit }) {
+  async nextQuestion({ commit, dispatch, state }, { chapterIndex }) {
     commit('NEXT_QUESTION')
+    await dispatch('getQuestion', {
+      chapterIndex,
+      questionIndexNumber: state.activeQuestionIndexNumber
+    })
   },
-  async prevQuestion({ commit }) {
+  async prevQuestion({ commit, dispatch, state }, { chapterIndex }) {
     commit('PREV_QUESTION')
+    await dispatch('getQuestion', {
+      chapterIndex,
+      questionIndexNumber: state.activeQuestionIndexNumber
+    })
   },
-  async addQuestion({ commit }, { chapterIndex }) {
+  async addQuestion({ commit, dispatch }, { chapterIndex }) {
     let pushRef = db
       .ref(`/teachers/0/chapters/${chapterIndex - 1}/question/`)
       .push()
@@ -99,9 +103,10 @@ export const actions = {
       'function-name': '',
       stub: '###'
     })
+    await dispatch('getAllQuestions')
   },
   async removeQuestion(
-    { commit, state },
+    { commit, state, dispatch },
     { chapterIndex, questionIndexNumber }
   ) {
     let chapters = state.teacher.chapters
@@ -110,9 +115,10 @@ export const actions = {
     db.ref(
       `/teachers/0/chapters/${chapterIndex - 1}/question/${questionIndex}`
     ).remove()
+    await dispatch('getAllQuestions')
   },
   async updateQuestion(
-    { commit, state },
+    { commit, state, dispatch },
     { chapterIndex, questionIndexNumber, text, answers, functionName, stub }
   ) {
     let questions = __questions(state.teacher.chapters, chapterIndex)
@@ -125,9 +131,10 @@ export const actions = {
       'function-name': functionName,
       stub: stub
     })
+    await dispatch('getAllQuestions')
   },
   async addAnswerToQuestion(
-    { commit, state },
+    { commit, state, dispatch },
     { chapterIndex, questionIndexNumber, answers }
   ) {
     let questions = __questions(state.teacher.chapters, chapterIndex)
@@ -136,9 +143,11 @@ export const actions = {
       `/teachers/0/chapters/${chapterIndex -
         1}/question/${questionIndex}/answers`
     ).set(answers)
+    await dispatch('getAllQuestions')
+    await dispatch('getQuestion', { chapterIndex, questionIndexNumber })
   },
   async removeAnswerFromQuestion(
-    { commit, state },
+    { commit, state, dispatch },
     { chapterIndex, questionIndexNumber, answerIndex }
   ) {
     let questions = __questions(state.teacher.chapters, chapterIndex)
@@ -147,9 +156,11 @@ export const actions = {
       `/teachers/0/chapters/${chapterIndex -
         1}/question/${questionIndex}/answers/${answerIndex}`
     ).remove()
+    await dispatch('getAllQuestions')
+    await dispatch('getQuestion', { chapterIndex, questionIndexNumber })
   },
   async addAnswerAssistant(
-    { commit, state },
+    { commit, state, dispatch },
     { chapterIndex, questionIndexNumber, assistants, comment }
   ) {
     let questions = __questions(state.teacher.chapters, chapterIndex)
@@ -164,9 +175,11 @@ export const actions = {
       answer: assistants.split(','),
       comment: comment
     })
+    await dispatch('getAllQuestions')
+    await dispatch('getQuestion', { chapterIndex, questionIndexNumber })
   },
   async removeAnswerAssistant(
-    { commit, state },
+    { commit, state, dispatch },
     { chapterIndex, questionIndexNumber, key }
   ) {
     let questions = __questions(state.teacher.chapters, chapterIndex)
@@ -175,6 +188,8 @@ export const actions = {
       `/teachers/0/chapters/${chapterIndex -
         1}/question/${questionIndex}/assistants/${key}`
     ).remove()
+    await dispatch('getAllQuestions')
+    await dispatch('getQuestion', { chapterIndex, questionIndexNumber })
   }
 }
 

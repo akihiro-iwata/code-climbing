@@ -50,7 +50,7 @@
               <button
                 v-if="isStubMode"
                 class="button is-primary"
-                @click="stubSave">
+                @click="save">
                 <span>保存</span>
               </button>
             </div>
@@ -306,10 +306,6 @@ export default {
     Opal.load('opal')
     Opal.load('opal-parser')
     await this.getAllQuestions()
-    console.log(
-      'created: this.activeQuestionIndexNumber',
-      this.activeQuestionIndexNumber
-    )
     await this.getQuestion({
       chapterIndex: this.activeChapterIndex,
       questionIndexNumber: this.activeQuestionIndexNumber
@@ -320,8 +316,7 @@ export default {
       questionIndexNumber: this.activeQuestionIndexNumber
     })
     this.question = this.activeQuestion.text
-    console.log('activeQuestion', this.activeQuestion)
-    this.answerContent = this.activeQuestion.stub
+    this.stub = this.activeQuestion.stub
   },
   methods: {
     ...mapActions('questions', [
@@ -384,30 +379,19 @@ export default {
     },
     async next() {
       this.clear()
-      await this.nextQuestion()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
+      await this.nextQuestion({
+        chapterIndex: this.activeChapterIndex
       })
       this.question = this.activeQuestion.text
-      console.log(
-        'next: this.activeQuestionIndexNumber',
-        this.activeQuestionIndexNumber
-      )
+      this.stub = this.activeQuestion.stub
     },
     async prev() {
       this.clear()
-      await this.prevQuestion()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
+      await this.prevQuestion({
+        chapterIndex: this.activeChapterIndex
       })
       this.question = this.activeQuestion.text
-      console.log(
-        'prev: this.activeQuestionIndexNumber',
-        this.activeQuestionIndexNumber
-      )
-      console.log('prev: ', this.activeQuestion)
+      this.stub = this.activeQuestion.stub
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -416,37 +400,18 @@ export default {
         }, time)
       })
     },
-    async stubSave() {
-      let params = {
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber,
-        text: this.question,
-        answers: this.activeQuestion.answers,
-        functionName: this.activeQuestion['function-name'],
-        stub: this.stub
-      }
-      await this.updateQuestion(params)
-      await this.getAllQuestions()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndex
-      })
-    },
     async save(newQuestion) {
+      let questionText =
+        newQuestion !== MouseEvent ? this.activeQuestion.text : newQuestion
       let params = {
         chapterIndex: this.activeChapterIndex,
         questionIndexNumber: this.activeQuestionIndexNumber,
-        text: newQuestion,
+        text: questionText,
         answers: this.activeQuestion.answers,
         functionName: this.activeQuestion['function-name'],
         stub: this.stub
       }
       await this.updateQuestion(params)
-      await this.getAllQuestions()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
-      })
     },
     async addAnswer() {
       if (!this.inputAnswer) return ''
@@ -458,11 +423,6 @@ export default {
         answers: answers
       }
       await this.addAnswerToQuestion(params)
-      await this.getAllQuestions()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
-      })
       this.inputAnswer = ''
     },
     async deleteAnswer(answerIndex) {
@@ -471,16 +431,6 @@ export default {
         questionIndexNumber: this.activeQuestionIndexNumber,
         answerIndex: answerIndex
       })
-      await this.getAllQuestions()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
-      })
-      console.log(
-        'this.activeQuestionIndexNumber:',
-        this.activeQuestionIndexNumber
-      )
-      console.log('this.activeQuestion', this.activeQuestion)
       this.inputAnswer = ''
     },
     async addAssistant() {
@@ -491,11 +441,6 @@ export default {
         assistants: this.assistantAnswer,
         comment: this.assistantComment
       })
-      await this.getAllQuestions()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
-      })
       this.assistantAnswer = ''
       this.assistantComment = ''
     },
@@ -504,11 +449,6 @@ export default {
         chapterIndex: this.activeChapterIndex,
         questionIndexNumber: this.activeQuestionIndexNumber,
         key: key
-      })
-      await this.getAllQuestions()
-      await this.getQuestion({
-        chapterIndex: this.activeChapterIndex,
-        questionIndexNumber: this.activeQuestionIndexNumber
       })
     },
     clear() {
@@ -521,7 +461,6 @@ export default {
       await this.addQuestion({
         chapterIndex: this.activeChapterIndex
       })
-      await this.getAllQuestions()
       await this.next()
     },
     async remove() {
@@ -529,7 +468,6 @@ export default {
         chapterIndex: this.activeChapterIndex,
         questionIndexNumber: this.activeQuestionIndexNumber
       })
-      await this.getAllQuestions()
       await this.prev()
     }
   }
