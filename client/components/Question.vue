@@ -128,6 +128,7 @@ import Header from './Header'
 import { mapActions, mapGetters } from 'vuex'
 import _ from 'lodash'
 import QuestionEditor from './QuestionEditor'
+import RubyException from '../util/RubyException'
 
 export default {
   components: {
@@ -229,7 +230,8 @@ export default {
         const tmpjs = Opal.compile(code)
         this.returnOut = eval(tmpjs)
       } catch (e) {
-        console.log(e)
+        let exception = new RubyException(e)
+        console.log(exception.message())
       }
       console.log = console_log_org
       this.grading()
