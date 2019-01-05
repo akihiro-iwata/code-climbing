@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <Header :show-name="false"/>
+    <Header :show-name="true"/>
     <div style="height: 10px; width: 100vw; background-color: #f0f0f0"/><!-- 隙間 -->
     <div class="contents">
       <div class="question"><!-- 問題文 -->
@@ -91,7 +91,9 @@
       </div>
 
     </div><!-- 終点: contents -->
-    <div class="footer">
+    <div
+      v-if="!teacherMode"
+      class="footer">
       <div style="width: 33%; height: 100%; display: flex; align-items: center">
         <img
           style="width: 44px  "
@@ -127,8 +129,18 @@
         <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
+    <div
+      v-if="teacherMode"
+      class="teacher-footer">
+      <div style="width: 33%; height: 100%; display: flex; align-items: center; margin-left: 20px">
+        <img
+          style="width: 44px  "
+          src="../assets/img/menu.png"
+          @click="goToTeacherAnswer">
+      </div>
+    </div><!-- 終点: footer -->
     <QuestionModal
-      v-if="enterModal"
+      v-if="enterModal && !teacherMode"
       @close="enterModal = false">
       <QuestionEditor
         v-if="activeQuestion.text"
@@ -155,6 +167,10 @@ export default {
   },
   props: {
     challengeMode: {
+      default: false,
+      type: Boolean
+    },
+    teacherMode: {
       default: false,
       type: Boolean
     }
@@ -328,6 +344,9 @@ export default {
     goToMenu() {
       this.$router.push('/home')
     },
+    goToTeacherAnswer() {
+      this.$router.push('/teacher/answer')
+    },
     timer() {
       let self = this
       this.timerObject = setInterval(function() {
@@ -438,6 +457,16 @@ export default {
   .question-index {
     color: white;
   }
+}
+
+.teacher-footer {
+  height: 8vh;
+  width: 100vw;
+  background-color: #444444;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0;
 }
 
 .ng-mark {

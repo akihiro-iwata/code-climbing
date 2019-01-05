@@ -26,7 +26,8 @@
                   v-for="k in Object.keys(allQuestions[0].question)"
                   :key="k"
                   :class="{success: isSuccess(1, k, allStudents[key].answers)}"
-                  class="progressIcon"/>
+                  class="progressIcon"
+                  @click="goToAnswer(k, allStudents[key].name)"/>
               </th>
               <th style="text-align: center">{{ correctCount(allStudents[key].answers) }} / {{ Object.keys(allQuestions[0].question).length }}</th>
               <th style="text-align: center">{{ Math.floor(timeCount(allStudents[key].answers) / 60) }} 分 {{ timeCount(allStudents[key].answers) % 60 }} 秒</th>
@@ -48,17 +49,24 @@ export default {
   },
   computed: {
     ...mapGetters('questions', ['allStudents', 'allQuestions']),
-    ...mapGetters('users', ['name'])
+    ...mapGetters('users', ['name']),
+    ...mapGetters('teachers', ['teacherName'])
   },
   async created() {
     await this.getAllQuestions()
     await this.getAllStudents()
+    await this.updateChapterIndex(1)
+    await this.updateQuestionIndex(0)
+    this.changeName(this.teacherName)
   },
   methods: {
-    ...mapActions('questions', ['getAllQuestions', 'getAllStudents']),
-    goToAnswer() {
-      this.$router.push('/')
-    },
+    ...mapActions('questions', [
+      'getAllQuestions',
+      'getAllStudents',
+      'updateChapterIndex',
+      'updateQuestionIndex'
+    ]),
+    ...mapActions('users', ['changeName']),
     questionCount(questions) {
       //FIXME indexごとに
       if (questions.length === 0) return 0
@@ -96,6 +104,12 @@ export default {
         sum += answers[key].time
       }
       return sum
+    },
+    async goToAnswer(questionIndex, name) {
+      await this.updateChapterIndex(1)
+      await this.updateQuestionIndex(questionIndex)
+      this.changeName(name)
+      this.$router.push('/teacher/studentQuestion')
     }
   }
 }

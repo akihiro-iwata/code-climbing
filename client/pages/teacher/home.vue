@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <Header :show-name="true"/>
+    <Header :show-name="false"/>
     <div class="contents">
       <div
         class="menu-panel"

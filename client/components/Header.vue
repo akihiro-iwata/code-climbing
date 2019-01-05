@@ -9,7 +9,9 @@
     </div>
     <div style="width: 15px"/><!-- 隙間 -->
     <div style="width: 50vw; height: 100%; display: flex; justify-content: flex-end; margin-right: 40px; align-items: center">
-      <span class="nameLabel">{{ name }}</span>
+      <span
+        v-if="showName"
+        class="nameLabel">{{ name }}</span>
     </div>
   </div><!-- 終点: header -->
 </template>

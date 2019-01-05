@@ -17,6 +17,9 @@ export const mutations = {
       name: DEFAULT_USER_NAME,
       id: DEFAULT_USER_ID
     }
+  },
+  CHANGE_NAME(state, payload) {
+    state.loggedInUser.name = payload
   }
 }
 
@@ -70,6 +73,9 @@ export const actions = {
       console.error(error)
       throw error
     }
+  },
+  changeName({ commit, state }, name) {
+    commit('CHANGE_NAME', name)
   }
 }
 

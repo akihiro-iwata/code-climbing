@@ -35,7 +35,7 @@ export const actions = {
 }
 
 export const getters = {
-  name(state) {
+  teacherName(state) {
     return state.loggedInUser.name || 'TestUser'
   }
 }
