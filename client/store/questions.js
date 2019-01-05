@@ -17,7 +17,8 @@ export const state = () => ({
   studentKey: 1,
   studentName: '',
   allAnswers: [],
-  activeQuestionAnswer: []
+  activeQuestionAnswer: [],
+  allChallengeAnswers: []
 })
 
 export const mutations = {
@@ -28,7 +29,7 @@ export const mutations = {
     state.activeChapterIndex = Number(payload) || 1
   },
   SET_ACTIVE_QUESTION_INDEX(state, payload) {
-    state.activeQuestionIndex = Number(payload) || ``
+    state.activeQuestionIndex = Number(payload) || payload
   },
   SET_ACTIVE_QUESTION(state, payload) {
     state.activeQuestion = payload || {}
@@ -59,7 +60,7 @@ export const mutations = {
   },
   SET_ALL_ANSWERS(state, payload) {
     state.allAnswers = payload
-    state.activeQuestionAnswer = __answer(state)
+    if (!state.challengeMode) state.activeQuestionAnswer = __answer(state)
   },
   SET_STUDENT_KEY(state, payload) {
     state.studentKey = payload
@@ -70,6 +71,10 @@ export const mutations = {
   ADD_ANSWER(state, payload) {
     const key = __uuid()
     state.allAnswers[key] = payload
+  },
+  SET_ALL_CHALLENGES(state, payload) {
+    state.allChallengeAnswers = payload
+    if (state.challengeMode) state.activeQuestionAnswer = __challenge(state)
   }
 }
 
@@ -126,6 +131,25 @@ const __answer = state => {
   }
   console.log('answers', answers)
   return answers
+}
+
+const __challenge = state => {
+  let challenges = []
+  for (let key of Object.keys(state.allChallengeAnswers)) {
+    let questionIndex =
+      state.activeQuestionIndex === 0 || state.activeQuestionIndex === '0'
+        ? Number(state.activeQuestionIndex)
+        : state.activeQuestionIndex // work around
+    if (
+      state.allChallengeAnswers[key]['chapter-index'] ===
+        state.activeChapterIndex &&
+      state.allChallengeAnswers[key]['question-index'] === questionIndex
+    ) {
+      challenges.push(state.allChallengeAnswers[key])
+    }
+  }
+  console.log('challenges', challenges)
+  return challenges
 }
 
 export const actions = {
@@ -232,6 +256,7 @@ export const actions = {
       }
     }
     commit('SET_ALL_ANSWERS', student.answers)
+    commit('SET_ALL_CHALLENGES', student.challenges)
   },
   async addAnswer({ commit, state, dispatch }, { correct, source, time }) {
     let pushRef = db.ref(`/students/${state.studentKey}/answers`).push()

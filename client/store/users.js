@@ -38,13 +38,22 @@ const __createInitUser = name => {
         source: '',
         time: 0
       }
+    },
+    challenges: {
+      dummy: {
+        'chapter-index': 1,
+        'question-index': 0,
+        outputs: [],
+        correct: false,
+        source: '',
+        time: 0
+      }
     }
   }
 }
 
 export const actions = {
   async login({ commit, state }, name) {
-    console.log('name', name)
     try {
       let users = (await db.ref('/students').once('value')).val()
       let exists = users.filter(user => user.name === name)
