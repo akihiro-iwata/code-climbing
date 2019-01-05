@@ -156,7 +156,9 @@ export default {
       isAnswer: true,
       isAssistant: false,
       assistantAnswer: '',
-      assistantComment: ''
+      assistantComment: '',
+      timerObject: null,
+      time: 0
     }
   },
   computed: {
@@ -190,6 +192,8 @@ export default {
     this.question = this.activeQuestion.text
     this.answerContent = this.activeQuestion.stub
     this.isCorrect = this.isCleared(this.activeQuestionAnswer)
+    if (this.timerObject) this.timerClear()
+    this.timer()
   },
   methods: {
     ...mapActions('questions', [
@@ -255,24 +259,30 @@ export default {
       await this.addAnswer({
         correct: this.isCorrect,
         source: this.answerContent,
-        time: 30 // FIXME
+        time: this.time // FIXME
       })
+      this.timerClear()
+      this.timer()
     },
     async next() {
       this.clear()
+      this.timerClear()
       await this.nextQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
       this.isCorrect = this.isCleared(this.activeQuestionAnswer)
       console.log('activeQuestionAnswer', this.activeQuestionAnswer)
+      this.timer()
     },
     async prev() {
       this.clear()
+      this.timerClear()
       await this.prevQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
       this.isCorrect = this.isCleared(this.activeQuestionAnswer)
       console.log('activeQuestionAnswer', this.activeQuestionAnswer)
+      this.timer()
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -289,6 +299,16 @@ export default {
     },
     goToMenu() {
       this.$router.push('/home')
+    },
+    timer() {
+      let self = this
+      this.timerObject = setInterval(function() {
+        self.time = self.time + 1
+      }, 1000)
+    },
+    timerClear() {
+      clearInterval(this.timerObject)
+      this.time = 0
     }
   }
 }
