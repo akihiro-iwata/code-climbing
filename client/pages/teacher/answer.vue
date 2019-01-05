@@ -16,20 +16,20 @@
           </thead>
           <tbody>
             <tr
-              v-for="key in Object.keys(allAnswers)"
+              v-for="key in Object.keys(allStudents)"
               :key="key">
-              <th style="text-align: center">{{ allAnswers[key].name }}</th>
+              <th style="text-align: center">{{ allStudents[key].name }}</th>
               <th
                 v-if="allQuestions.length !== 0"
                 style="display: flex; height: 100%; align-items: center; min-width: 32vw">
                 <span
-                  v-for="num in allQuestions[0].question.length"
-                  :key="num"
-                  :class="{success: isSuccess(1, num, allAnswers[key])}"
+                  v-for="k in Object.keys(allQuestions[0].question)"
+                  :key="k"
+                  :class="{success: isSuccess(1, k, allStudents[key].answers)}"
                   class="progressIcon"/>
               </th>
-              <th style="text-align: center">{{ allAnswers[key].answersByChapter[1].correctCount }} / {{ questionCount(allQuestions) }}</th>
-              <th style="text-align: center">{{ Math.floor(allAnswers[key].answersByChapter[1].sumTime / 60) }} 分 {{ allAnswers[key].answersByChapter[1].sumTime % 60 }} 秒</th>
+              <th style="text-align: center">{{ correctCount(allStudents[key].answers) }} / {{ Object.keys(allQuestions[0].question).length }}</th>
+              <th style="text-align: center">{{ Math.floor(timeCount(allStudents[key].answers) / 60) }} 分 {{ timeCount(allStudents[key].answers) % 60 }} 秒</th>
             </tr>
           </tbody>
         </table>
@@ -47,16 +47,15 @@ export default {
     Header: Header
   },
   computed: {
-    ...mapGetters('answers', ['allAnswers']),
-    ...mapGetters('questions', ['allQuestions'])
+    ...mapGetters('questions', ['allStudents', 'allQuestions']),
+    ...mapGetters('users', ['name'])
   },
   async created() {
-    await this.getAllAnswers()
     await this.getAllQuestions()
+    await this.getAllStudents()
   },
   methods: {
-    ...mapActions('answers', ['getAllAnswers']),
-    ...mapActions('questions', ['getAllQuestions']),
+    ...mapActions('questions', ['getAllQuestions', 'getAllStudents']),
     goToAnswer() {
       this.$router.push('/')
     },
@@ -65,18 +64,44 @@ export default {
       if (questions.length === 0) return 0
       return questions[0].question.length
     },
-    isSuccess(chapterIndex, questionIndex, answersByStudent) {
-      console.log('answersByStudent', answersByStudent)
-      let answers = answersByStudent.answersByChapter[chapterIndex]
-      console.log('questionIndex', questionIndex)
-      console.log('answers', answers)
-      return answers[questionIndex - 1] && answers[questionIndex - 1].correct
+    isSuccess(chapterIndex, questionIndex, answers) {
+      let answer = []
+      for (let k of Object.keys(answers)) {
+        if (
+          answers[k]['chapter-index'] === chapterIndex &&
+          answers[k]['question-index'] == questionIndex &&
+          answers[k].correct === true
+        ) {
+          answer.push(answers[k])
+        }
+      }
+      return answer.length !== 0
+    },
+    correctCount(answers) {
+      let correctSymbols = []
+      for (let key of Object.keys(answers)) {
+        let symbol =
+          answers[key]['chapter-index'] + '|' + answers[key]['question-index']
+        if (correctSymbols.includes(symbol)) continue
+        if (answers[key].correct)
+          correctSymbols.push(
+            answers[key]['chapter-index'] + '|' + answers[key]['question-index']
+          )
+      }
+      return correctSymbols.length
+    },
+    timeCount(answers) {
+      let sum = 0
+      for (let key of Object.keys(answers)) {
+        sum += answers[key].time
+      }
+      return sum
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .page {
   width: 100vw;
   height: 100vh;

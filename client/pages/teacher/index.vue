@@ -47,7 +47,7 @@ export default {
     async doLogin() {
       try {
         await this.login(this.id)
-        this.$router.push('/teacher/question')
+        this.$router.push('/teacher/home')
       } catch (error) {
         console.error(error)
       }

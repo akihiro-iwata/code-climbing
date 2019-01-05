@@ -18,7 +18,8 @@ export const state = () => ({
   studentName: '',
   allAnswers: [],
   activeQuestionAnswer: [],
-  allChallengeAnswers: []
+  allChallengeAnswers: [],
+  allStudents: {}
 })
 
 export const mutations = {
@@ -75,6 +76,9 @@ export const mutations = {
   SET_ALL_CHALLENGES(state, payload) {
     state.allChallengeAnswers = payload
     if (state.challengeMode) state.activeQuestionAnswer = __challenge(state)
+  },
+  SET_ALL_STUDENTS(state, payload) {
+    state.allStudents = payload
   }
 }
 
@@ -269,6 +273,12 @@ export const actions = {
     }
     await pushRef.set(answer)
     commit('ADD_ANSWER', answer)
+  },
+  async getAllStudents({ commit }) {
+    let studentsRef = db.ref('/students')
+    studentsRef.on('value', function(snapshot) {
+      commit('SET_ALL_STUDENTS', snapshot.val())
+    })
   }
 }
 
@@ -290,5 +300,8 @@ export const getters = {
   },
   activeQuestionAnswer(state) {
     return state.activeQuestionAnswer
+  },
+  allStudents(state) {
+    return state.allStudents
   }
 }
