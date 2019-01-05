@@ -12,7 +12,7 @@
     <div class="field">
       <div class="control">
         <input
-          v-model="name"
+          v-model="username"
           class="input is-large"
           type="text"
           placeholder="氏名"
@@ -26,36 +26,51 @@
         :disabled="name.length === 0"
         class="button is-primary is-rounded"
         style="height: 6vh; width: 40vw"
-        @click="login">ログイン</button>
+        @click="doLogin">ログイン</button>
     </div>
     <div style="width: 100vw; height: 15vh"/>
   </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
+
+const DEFAULT_USER_NAME = 'テストユーザー2'
 
 export default {
   name: 'Index',
   data() {
     return {
-      name: '',
-      canDoLogin: false
+      canDoLogin: false,
+      username: ''
+    }
+  },
+  computed: {
+    ...mapGetters('users', ['name'])
+  },
+  watch: {
+    name(newVal) {
+      this.username = newVal
+    }
+  },
+  mounted() {
+    if (this.name && this.name !== DEFAULT_USER_NAME) {
+      this.username = this.name
     }
   },
   methods: {
     ...mapActions('users', ['login']),
-    async login() {
+    async doLogin() {
       try {
-        await this.login(this.name)
+        await this.login(this.username)
         this.$router.push('/home')
       } catch (error) {
         console.error(error)
       }
     },
     async doLoginByEnter() {
-      if (!this.name || !this.canDoLogin) return
-      await this.login()
+      if (!this.username || !this.canDoLogin) return
+      await this.doLogin()
     },
     setCanDoLogin() {
       this.canDoLogin = true
