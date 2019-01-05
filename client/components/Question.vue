@@ -9,6 +9,9 @@
           :question="activeQuestion.text"
           :is-admin-mode="false"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
+        <button
+          class="button is-info"
+          @click="enterModal= true">スライドを見る</button>
       </div><!-- 終点:問題文 -->
       <div style="height: 100%; width: 20px"/><!-- 隙間 -->
       <div class="center">
@@ -51,10 +54,14 @@
           class="result">
           <div style="margin-left: 10px; font-size: 22px">実行結果</div>
           <div class="console">
-            <div v-if="consoleOut.length !== 0">
+            <div
+              v-if="consoleOut.length !== 0"
+              class="msg">
               <div
                 v-for="out in consoleOut"
-                :key="out.index">{{ out }}</div>
+                :key="out.index"
+                :class="{errorMsg: errorMode}"
+              >{{ out }}</div>
             </div>
           </div><!-- 終点:コンソール -->
         </div>
@@ -120,6 +127,14 @@
         <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
+    <QuestionModal
+      v-if="enterModal"
+      @close="enterModal = false">
+      <QuestionEditor
+        v-if="activeQuestion.text"
+        :question="activeQuestion.text"
+        :is-admin-mode="false"/>
+    </QuestionModal>
   </div>
 </template>
 
@@ -129,12 +144,14 @@ import { mapActions, mapGetters } from 'vuex'
 import _ from 'lodash'
 import QuestionEditor from './QuestionEditor'
 import RubyException from '../util/RubyException'
+import QuestionModal from './QuestionModal'
 
 export default {
   components: {
     editor: require('vue2-ace-editor'),
     Header: Header,
-    QuestionEditor: QuestionEditor
+    QuestionEditor: QuestionEditor,
+    QuestionModal: QuestionModal
   },
   props: {
     challengeMode: {
@@ -159,7 +176,9 @@ export default {
       assistantAnswer: '',
       assistantComment: '',
       timerObject: null,
-      time: 0
+      time: 0,
+      errorMode: false,
+      enterModal: false
     }
   },
   computed: {
@@ -195,6 +214,7 @@ export default {
     this.isCorrect = this.isCleared(this.activeQuestionAnswer)
     if (this.timerObject) this.timerClear()
     this.timer()
+    if (!this.isCorrect) this.enterModal = true
   },
   methods: {
     ...mapActions('questions', [
@@ -216,6 +236,7 @@ export default {
       // FIXME
       console.log('this.answerContent', JSON.stringify(this.answerContent))
       this.consoleOut = []
+      this.errorMode = false
       await this.sleep(100)
       const console_log_org = console.log
       console.log = this.output
@@ -230,8 +251,11 @@ export default {
         const tmpjs = Opal.compile(code)
         this.returnOut = eval(tmpjs)
       } catch (e) {
+        this.errorMode = true
         let exception = new RubyException(e)
-        console.log(exception.message())
+        for (let msg of exception.message()) {
+          console.log(msg)
+        }
       }
       console.log = console_log_org
       this.grading()
@@ -275,6 +299,7 @@ export default {
       this.isCorrect = this.isCleared(this.activeQuestionAnswer)
       console.log('activeQuestionAnswer', this.activeQuestionAnswer)
       this.timer()
+      if (!this.isCorrect) this.enterModal = true
     },
     async prev() {
       this.clear()
@@ -285,6 +310,7 @@ export default {
       this.isCorrect = this.isCleared(this.activeQuestionAnswer)
       console.log('activeQuestionAnswer', this.activeQuestionAnswer)
       this.timer()
+      if (!this.isCorrect) this.enterModal = true
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -378,7 +404,14 @@ export default {
         padding-top: 5px;
         word-wrap: break-word;
         background-color: #101010;
-        color: #92fa4d;
+
+        .msg {
+          color: #92fa4d;
+
+          .errorMsg {
+            color: red;
+          }
+        }
       }
     }
 
