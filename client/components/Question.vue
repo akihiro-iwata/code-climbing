@@ -165,7 +165,8 @@ export default {
       'activeChapterIndex',
       'activeQuestionIndex',
       'activeQuestion',
-      'activeQuestionIndexNumber'
+      'activeQuestionIndexNumber',
+      'activeQuestionAnswer'
     ]),
     ...mapGetters('users', ['name']),
     questionCount() {
@@ -181,37 +182,25 @@ export default {
   async created() {
     Opal.load('opal')
     Opal.load('opal-parser')
-    if (this.challengeMode) {
-      await this.changeMode({ isChallengeMode: true })
-    }
+    await this.changeMode({ isChallengeMode: this.challengeMode })
     await this.getAllQuestions()
     await this.getQuestion()
-    await this.getAnswer({
-      name: this.name,
-      chapterIndex: this.activeChapterIndex,
-      questionIndexNumber: this.activeQuestionIndexNumber
-    })
+    await this.getAllAnswers({ name: this.name })
+    console.log('activeQuestionAnswer', this.activeQuestionAnswer)
     this.question = this.activeQuestion.text
     this.answerContent = this.activeQuestion.stub
+    this.isCorrect = this.isCleared(this.activeQuestionAnswer)
   },
   methods: {
     ...mapActions('questions', [
       'getAllQuestions',
-      'updateChapterIndex',
-      'updateQuestionIndex',
       'getQuestion',
       'nextQuestion',
       'prevQuestion',
-      'updateQuestion',
-      'addAnswerToQuestion',
-      'removeAnswerFromQuestion',
-      'addAnswerAssistant',
-      'removeAnswerAssistant',
-      'addQuestion',
-      'removeQuestion',
-      'changeMode'
+      'changeMode',
+      'getAllAnswers',
+      'addAnswer'
     ]),
-    ...mapActions('answers', ['getAnswer']),
     editorInit() {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
@@ -247,7 +236,13 @@ export default {
     output(msg) {
       this.consoleOut.push(msg)
     },
-    grading() {
+    isCleared(answers) {
+      let clearedAnswers = answers.filter(answer => answer.correct)
+      if (clearedAnswers.length === 0) return false
+      this.answerContent = clearedAnswers[clearedAnswers.length - 1].source
+      return true
+    },
+    async grading() {
       this.isCorrect = false
       this.isFalse = false
       let out = this.consoleOut.map(o => o.replace('\n', ''))
@@ -257,20 +252,27 @@ export default {
       } else {
         this.isFalse = true
       }
+      await this.addAnswer({
+        correct: this.isCorrect,
+        source: this.answerContent,
+        time: 30 // FIXME
+      })
     },
     async next() {
       this.clear()
       await this.nextQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
+      this.isCorrect = this.isCleared(this.activeQuestionAnswer)
+      console.log('activeQuestionAnswer', this.activeQuestionAnswer)
     },
     async prev() {
       this.clear()
-      await this.prevQuestion({
-        chapterIndex: this.activeChapterIndex
-      })
+      await this.prevQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
+      this.isCorrect = this.isCleared(this.activeQuestionAnswer)
+      console.log('activeQuestionAnswer', this.activeQuestionAnswer)
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -284,14 +286,6 @@ export default {
       this.isFalse = false
       this.answerContent = ''
       this.stub = ''
-    },
-    async add() {
-      await this.addQuestion()
-      await this.next()
-    },
-    async remove() {
-      await this.removeQuestion()
-      await this.prev()
     },
     goToMenu() {
       this.$router.push('/home')

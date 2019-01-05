@@ -1,4 +1,5 @@
 import { db } from '../plugins/firebase'
+import __uuid from '../util/uuid'
 
 const TEACHER_ID = 'fb1cfb60-03d1-43a7-bfa8-f9ccb8d7754c' // FIXME
 const SCHOOL_ID = '1'
@@ -12,7 +13,11 @@ export const state = () => ({
   teacherId: TEACHER_ID,
   teacher: {},
   schoolId: SCHOOL_ID,
-  challengeMode: false
+  challengeMode: false,
+  studentKey: 1,
+  studentName: '',
+  allAnswers: [],
+  activeQuestionAnswer: []
 })
 
 export const mutations = {
@@ -35,6 +40,7 @@ export const mutations = {
     let questions = __questions(chapters, state.activeChapterIndex)
     let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
     state.activeQuestionIndex = questionIndex
+    state.activeQuestionAnswer = __answer(state)
   },
   NEXT_QUESTION(state) {
     state.activeQuestionIndexNumber =
@@ -43,12 +49,27 @@ export const mutations = {
     let questions = __questions(chapters, state.activeChapterIndex)
     let questionIndex = Object.keys(questions)[state.activeQuestionIndexNumber]
     state.activeQuestionIndex = questionIndex
+    state.activeQuestionAnswer = __answer(state)
   },
   SET_TEACHER(state, payload) {
     state.teacher = payload || {}
   },
   SET_CHALLENGE_MODE(state, payload) {
     state.challengeMode = payload
+  },
+  SET_ALL_ANSWERS(state, payload) {
+    state.allAnswers = payload
+    state.activeQuestionAnswer = __answer(state)
+  },
+  SET_STUDENT_KEY(state, payload) {
+    state.studentKey = payload
+  },
+  SET_STUDENT_NAME(state, payload) {
+    state.studentName = payload
+  },
+  ADD_ANSWER(state, payload) {
+    const key = __uuid()
+    state.allAnswers[key] = payload
   }
 }
 
@@ -88,7 +109,27 @@ const __dbRefUrl = (state, addMode) => {
   }
 }
 
+const __answer = state => {
+  let answers = []
+  console.log('state.allAnswers', state.allAnswers)
+  for (let key of Object.keys(state.allAnswers)) {
+    let questionIndex =
+      state.activeQuestionIndex === 0 || state.activeQuestionIndex === '0'
+        ? Number(state.activeQuestionIndex)
+        : state.activeQuestionIndex // work around
+    if (
+      state.allAnswers[key]['chapter-index'] === state.activeChapterIndex &&
+      state.allAnswers[key]['question-index'] === questionIndex
+    ) {
+      answers.push(state.allAnswers[key])
+    }
+  }
+  console.log('answers', answers)
+  return answers
+}
+
 export const actions = {
+  /* question */
   async getAllQuestions({ commit, state }) {
     if (state.challengeMode) {
       let questions = (await db
@@ -109,8 +150,6 @@ export const actions = {
   },
   async getQuestion({ commit, state }) {
     let questions = __questions(state.allQuestions, state.activeChapterIndex)
-    console.log('questions', questions)
-    console.log('state.activeChapterIndex', state.activeChapterIndex)
     console.log('state.activeQuestionIndex', state.activeQuestionIndex)
     commit('SET_ACTIVE_QUESTION', questions[state.activeQuestionIndex])
   },
@@ -177,6 +216,34 @@ export const actions = {
   },
   async changeMode({ commit }, { isChallengeMode }) {
     commit('SET_CHALLENGE_MODE', isChallengeMode)
+  },
+  /* answer */
+  async getAllAnswers({ commit, state }, { name }) {
+    let students = (await db.ref('/students').once('value')).val()
+    console.log('students', students)
+    let student = {}
+    for (let key of Object.keys(students)) {
+      if (!students[key]) continue
+      if (!students[key].name) continue
+      if (students[key].name === name) {
+        student = students[key]
+        commit('SET_STUDENT_KEY', key)
+        commit('SET_STUDENT_NAME', name)
+      }
+    }
+    commit('SET_ALL_ANSWERS', student.answers)
+  },
+  async addAnswer({ commit, state, dispatch }, { correct, source, time }) {
+    let pushRef = db.ref(`/students/${state.studentKey}/answers`).push()
+    let answer = {
+      'chapter-index': state.activeChapterIndex,
+      'question-index': state.activeQuestionIndex,
+      correct: correct,
+      source: source,
+      time: time
+    }
+    await pushRef.set(answer)
+    commit('ADD_ANSWER', answer)
   }
 }
 
@@ -195,5 +262,8 @@ export const getters = {
   },
   activeQuestionIndexNumber(state) {
     return state.activeQuestionIndexNumber || 0
+  },
+  activeQuestionAnswer(state) {
+    return state.activeQuestionAnswer
   }
 }

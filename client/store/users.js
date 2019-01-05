@@ -1,4 +1,5 @@
 import { db } from '../plugins/firebase'
+import __uuid from '../util/uuid'
 
 const DEFAULT_USER_ID = '8A1A23E4-FCB0-4910-95FA-58FD0267099D'
 const DEFAULT_USER_NAME = 'テストユーザー2'
@@ -28,8 +29,8 @@ const __createInitUser = name => {
     id: __uuid(),
     name: name,
     teacherId: 'fb1cfb60-03d1-43a7-bfa8-f9ccb8d7754c',
-    answers: [
-      {
+    answers: {
+      dummy: {
         'chapter-index': 1,
         'question-index': 0,
         outputs: [],
@@ -37,22 +38,8 @@ const __createInitUser = name => {
         source: '',
         time: 0
       }
-    ]
-  }
-}
-
-const __uuid = () => {
-  let uuid = '',
-    i,
-    random
-  for (i = 0; i < 32; i++) {
-    random = (Math.random() * 16) | 0
-    if (i === 8 || i === 12 || i === 16 || i === 20) {
-      uuid += '-'
     }
-    uuid += (i === 12 ? 4 : i === 16 ? (random & 3) | 8 : random).toString(16)
   }
-  return uuid
 }
 
 export const actions = {

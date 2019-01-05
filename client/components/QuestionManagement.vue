@@ -311,9 +311,7 @@ export default {
   async created() {
     Opal.load('opal')
     Opal.load('opal-parser')
-    if (this.challengeMode) {
-      await this.changeMode({ isChallengeMode: true })
-    }
+    await this.changeMode({ isChallengeMode: this.challengeMode })
     await this.getAllQuestions()
     await this.getQuestion({
       chapterIndex: this.activeChapterIndex,
@@ -344,7 +342,6 @@ export default {
       'removeQuestion',
       'changeMode'
     ]),
-    ...mapActions('answers', ['getAnswer']),
     editorInit() {
       require('brace/ext/language_tools')
       require('brace/mode/ruby')
