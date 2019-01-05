@@ -13,9 +13,14 @@ export default {
   async created() {
     await this.updateChapterIndex(1)
     await this.updateQuestionIndex(0)
+    await this.updateQuestionIndexNumber(0)
   },
   methods: {
-    ...mapActions('questions', ['updateChapterIndex', 'updateQuestionIndex'])
+    ...mapActions('questions', [
+      'updateChapterIndex',
+      'updateQuestionIndex',
+      'updateQuestionIndexNumber'
+    ])
   }
 }
 </script>

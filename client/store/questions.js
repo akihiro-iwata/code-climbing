@@ -32,6 +32,9 @@ export const mutations = {
   SET_ACTIVE_QUESTION_INDEX(state, payload) {
     state.activeQuestionIndex = Number(payload) || payload
   },
+  SET_ACTIVE_QUESTION_INDEX_NUMBER(state, payload) {
+    state.activeQuestionIndexNumber = payload || payload
+  },
   SET_ACTIVE_QUESTION(state, payload) {
     state.activeQuestion = payload || {}
   },
@@ -175,6 +178,9 @@ export const actions = {
   },
   async updateQuestionIndex({ commit }, questionIndex) {
     commit('SET_ACTIVE_QUESTION_INDEX', questionIndex)
+  },
+  async updateQuestionIndexNumber({ commit }, questionIndexNumber) {
+    commit('SET_ACTIVE_QUESTION_INDEX_NUMBER', questionIndexNumber)
   },
   async getQuestion({ commit, state }) {
     let questions = __questions(state.allQuestions, state.activeChapterIndex)
