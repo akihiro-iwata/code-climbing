@@ -1,7 +1,7 @@
 {
   "name": "code-climbling",
   "version": "1.0.0",
-  "description": "My transcendent Nuxt.js project",
+  "description": "プログラミング教育を支援するCode Climbing",
   "author": "akihiro iwata",
   "private": true,
   "scripts": {
