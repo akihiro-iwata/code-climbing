@@ -4,6 +4,7 @@
 
 <script>
 import QuestionManagement from '../../components/QuestionManagement'
+import { mapActions } from 'vuex'
 
 export default {
   components: {
