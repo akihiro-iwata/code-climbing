@@ -1,9 +1,16 @@
-import firebase from 'firebase/app'
-import 'firebase/database'
+import firebase from 'firebase'
 
-const config = require('../config/config.json')
+let config = {
+  apiKey: process.env.apiKey,
+  authDomain: process.env.authDomain,
+  databaseURL: process.env.databaseURL,
+  projectId: process.env.projectId,
+  messagingSenderId: process.env.messagingSenderId,
+  storageBucket: process.env.storageBucket
+}
 
 if (!firebase.apps.length) {
+  console.log(config)
   firebase.initializeApp(config)
 }
 

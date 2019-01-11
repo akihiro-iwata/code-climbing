@@ -1,4 +1,5 @@
 const pkg = require('./package')
+const webpack = require('webpack')
 
 module.exports = {
   mode: 'spa',
@@ -84,6 +85,17 @@ module.exports = {
           exclude: /(node_modules)/
         })
       }
+      // set env
+      config.plugins.push(
+        new webpack.EnvironmentPlugin([
+          'apiKey',
+          'authDomain',
+          'databaseURL',
+          'projectId',
+          'storageBucket',
+          'messagingSenderId'
+        ])
+      )
     }
   }
 }
