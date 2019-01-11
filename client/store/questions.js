@@ -127,7 +127,7 @@ const __answer = state => {
   for (let key of Object.keys(state.allAnswers)) {
     let questionIndex =
       state.activeQuestionIndex === 0 || state.activeQuestionIndex === '0'
-        ? Number(state.activeQuestionIndex)
+        ? String(state.activeQuestionIndex)
         : state.activeQuestionIndex // work around
     if (
       state.allAnswers[key]['chapter-index'] === state.activeChapterIndex &&

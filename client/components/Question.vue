@@ -209,12 +209,11 @@ export default {
     ...mapGetters('users', ['name']),
     questionCount() {
       return Object.keys(this.allQuestions[0].question).length
-    }
-  },
-  mounted() {
-    this.question = this.activeQuestion.text
-    if (this.activeQuestion.stub) {
-      this.stub = this.activeQuestion.stub
+    },
+    latestActiveQuestionAnswer() {
+      if (this.activeQuestionAnswer.length === 0) return false
+      return this.activeQuestionAnswer[this.activeQuestionAnswer.length - 1]
+        .source
     }
   },
   async created() {
@@ -224,9 +223,10 @@ export default {
     await this.getAllQuestions()
     await this.getQuestion()
     await this.getAllAnswers({ name: this.name })
-    console.log('activeQuestionAnswer', this.activeQuestionAnswer)
     this.question = this.activeQuestion.text
-    this.answerContent = this.activeQuestion.stub
+    this.answerContent = this.latestActiveQuestionAnswer.source
+      ? this.latestActiveQuestionAnswer.source
+      : this.activeQuestion.stub
     this.isCorrect = this.isCleared(this.activeQuestionAnswer)
     if (this.timerObject) this.timerClear()
     this.timer()
@@ -311,9 +311,10 @@ export default {
       this.timerClear()
       await this.nextQuestion()
       this.question = this.activeQuestion.text
-      this.stub = this.activeQuestion.stub
+      this.answerContent = this.latestActiveQuestionAnswer.source
+        ? this.latestActiveQuestionAnswer.source
+        : this.activeQuestion.stub
       this.isCorrect = this.isCleared(this.activeQuestionAnswer)
-      console.log('activeQuestionAnswer', this.activeQuestionAnswer)
       this.timer()
       if (!this.isCorrect) this.enterModal = true
     },
@@ -322,9 +323,10 @@ export default {
       this.timerClear()
       await this.prevQuestion()
       this.question = this.activeQuestion.text
-      this.stub = this.activeQuestion.stub
+      this.answerContent = this.latestActiveQuestionAnswer.source
+        ? this.latestActiveQuestionAnswer.source
+        : this.activeQuestion.stub
       this.isCorrect = this.isCleared(this.activeQuestionAnswer)
-      console.log('activeQuestionAnswer', this.activeQuestionAnswer)
       this.timer()
       if (!this.isCorrect) this.enterModal = true
     },
