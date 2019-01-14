@@ -94,9 +94,9 @@
     <div
       v-if="!teacherMode"
       class="footer">
-      <div style="width: 33%; height: 100%; display: flex; align-items: center">
+      <div style="width: 33%; height: 100%; display: flex; align-items: center;">
         <img
-          style="width: 44px  "
+          style="width: 44px; cursor: pointer"
           src="../assets/img/menu.png"
           @click="goToMenu">
       </div>
@@ -134,7 +134,7 @@
       class="teacher-footer">
       <div style="width: 33%; height: 100%; display: flex; align-items: center; margin-left: 20px">
         <img
-          style="width: 44px  "
+          style="width: 44px; cursor: pointer"
           src="../assets/img/menu.png"
           @click="goToTeacherAnswer">
       </div>

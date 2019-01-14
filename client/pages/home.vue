@@ -88,6 +88,7 @@ export default {
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
+      cursor: pointer;
 
       .content {
         width: 200px;

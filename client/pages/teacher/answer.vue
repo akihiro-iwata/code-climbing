@@ -36,6 +36,14 @@
         </table>
       </div>
     </div>
+    <div class="footer">
+      <div style="width: 100%; height: 100%; display: flex; align-items: center; padding-left: 20px">
+        <img
+          style="width: 44px; cursor: pointer"
+          src="../../assets/img/menu.png"
+          @click="goToTeacherMenu">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -110,6 +118,9 @@ export default {
       await this.updateQuestionIndex(questionIndex)
       this.changeName(name)
       this.$router.push('/teacher/studentQuestion')
+    },
+    goToTeacherMenu() {
+      this.$router.push('/teacher/home')
     }
   }
 }
@@ -123,11 +134,12 @@ export default {
   flex-wrap: wrap;
 
   .contents {
-    height: 82vh;
+    height: 84vh;
     width: 100vw;
     display: flex;
     flex-wrap: wrap;
     background-color: #f0f0f0;
+    overflow-y: scroll;
 
     .title {
       height: 5vh;

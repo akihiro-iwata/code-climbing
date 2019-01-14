@@ -209,7 +209,18 @@
 
     </div><!-- 終点: contents -->
     <div class="footer">
-      <div style="width: 33%; height: 100%"/>
+      <div style="width: 33%; height: 100%; display: flex; align-items: center;">
+        <img
+          v-if="challengeMode"
+          style="width: 44px; cursor: pointer"
+          src="../assets/img/menu.png"
+          @click="goToMenu">
+        <img
+          v-if="!challengeMode"
+          style="width: 44px; cursor: pointer"
+          src="../assets/img/menu.png"
+          @click="goToTeacherMenu">
+      </div>
       <div
         style="width: 33%; height: 100%"
         class="footer">
@@ -385,10 +396,12 @@ export default {
       }
     },
     async next() {
+      this.$emit('loadStart')
       this.clear()
       await this.nextQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
+      //this.$emit('loadStop')
     },
     async prev() {
       this.clear()
@@ -450,6 +463,12 @@ export default {
     async remove() {
       await this.removeQuestion()
       await this.prev()
+    },
+    goToMenu() {
+      this.$router.push('/home')
+    },
+    goToTeacherMenu() {
+      this.$router.push('/teacher/home')
     }
   }
 }

@@ -1,5 +1,9 @@
 <template>
-  <QuestionManagement :challenge-mode="false"/>
+  <QuestionManagement
+    :challenge-mode="false"
+    @loadStart="loadStart"
+    @loadStop="loadStop"
+  />
 </template>
 
 <script>
@@ -20,7 +24,14 @@ export default {
       'updateChapterIndex',
       'updateQuestionIndex',
       'updateQuestionIndexNumber'
-    ])
+    ]),
+    loadStart() {
+      this.$emit('startLoading')
+    },
+    loadStop() {
+      console.log('loadStop')
+      this.isLoading = false
+    }
   }
 }
 </script>
