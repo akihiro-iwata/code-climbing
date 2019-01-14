@@ -213,13 +213,19 @@ export const actions = {
     { commit, state, dispatch },
     { text, answers, functionName, stub }
   ) {
-    db.ref(__dbRefUrl(state)).set({
-      text: text,
-      answers: answers,
-      'function-name': functionName,
-      stub: stub
-    })
-    await dispatch('getAllQuestions')
+    if (!answers) throw new Error('no answers')
+    try {
+      console.log('answers', answers)
+      db.ref(__dbRefUrl(state)).set({
+        text: text,
+        answers: answers,
+        'function-name': functionName,
+        stub: stub
+      })
+      await dispatch('getAllQuestions')
+    } catch (e) {
+      throw e
+    }
   },
   async addAnswerToQuestion({ commit, state, dispatch }, { answers }) {
     db.ref(__dbRefUrl(state) + '/answers').set(answers)

@@ -123,10 +123,14 @@
           </div>
           <input
             v-model="inputAnswer"
+            :class="{error: noAnswersError}"
             class="input"
             type="text"
             placeholder="e.g) Hello World"
             style="margin-left: 10px; margin-right: 10px; width: 92%; height: 44px; margin-bottom: 10px">
+          <div
+            v-if="noAnswersError"
+            style="width: 100%; text-align: center; margin-bottom: 10px; color: red">問題作成時は答えを最低一つ入力してください。</div>
           <span
             class="icon"
             style="width: 100%; height: 44px; font-size: 36px">
@@ -259,6 +263,7 @@
         <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
+    <Loading v-if="isLoading"/>
   </div>
 </template>
 
@@ -267,12 +272,14 @@ import Header from './Header'
 import { mapActions, mapGetters } from 'vuex'
 import _ from 'lodash'
 import QuestionEditor from './QuestionEditor'
+import Loading from '../components/Loading'
 
 export default {
   components: {
     editor: require('vue2-ace-editor'),
     Header: Header,
-    QuestionEditor: QuestionEditor
+    QuestionEditor: QuestionEditor,
+    Loading: Loading
   },
   props: {
     challengeMode: {
@@ -297,7 +304,9 @@ export default {
       isAnswer: true,
       isAssistant: false,
       assistantAnswer: '',
-      assistantComment: ''
+      assistantComment: '',
+      isLoading: false,
+      noAnswersError: false
     }
   },
   computed: {
@@ -396,18 +405,20 @@ export default {
       }
     },
     async next() {
-      this.$emit('loadStart')
+      this.isLoading = true
       this.clear()
       await this.nextQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
-      //this.$emit('loadStop')
+      this.isLoading = false
     },
     async prev() {
+      this.isLoading = true
       this.clear()
       await this.prevQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
+      this.isLoading = false
     },
     sleep(time) {
       return new Promise((resolve, reject) => {
@@ -417,6 +428,7 @@ export default {
       })
     },
     async save(newQuestion) {
+      this.isLoading = true
       let questionText =
         newQuestion !== MouseEvent ? newQuestion : this.activeQuestion.text
       let params = {
@@ -425,7 +437,17 @@ export default {
         functionName: this.activeQuestion['function-name'],
         stub: this.stub
       }
-      await this.updateQuestion(params)
+      try {
+        await this.updateQuestion(params)
+      } catch (e) {
+        console.error(e)
+        if (e.message === 'no answers') {
+          this.noAnswersError = true
+          this.isLoading = false
+        }
+        this.isLoading = false
+      }
+      this.isLoading = false
     },
     async addAnswer() {
       if (!this.inputAnswer) return ''
@@ -433,6 +455,7 @@ export default {
       answers.push(this.inputAnswer)
       await this.addAnswerToQuestion({ answers: answers })
       this.inputAnswer = ''
+      this.noAnswersError = false
     },
     async deleteAnswer(answerIndex) {
       await this.removeAnswerFromQuestion({ answerIndex: answerIndex })
@@ -522,6 +545,10 @@ export default {
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: flex-start;
+
+    .input.error {
+      border-color: red;
+    }
 
     .result {
       width: 30vw;
