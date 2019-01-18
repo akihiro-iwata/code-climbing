@@ -20,10 +20,16 @@
           <ul style="display: flex; justify-content: center">
             <li
               :class="{ 'is-active': isStubMode }"
-              @click="isStubMode = true"><a>生徒用画面</a></li>
+              @click="isStubMode = true">
+              <a v-if="!challengeMode">生徒用画面</a>
+              <a v-if="challengeMode">出題用画面</a>
+            </li>
             <li
               :class="{ 'is-active': !isStubMode }"
-              @click="isStubMode = false"><a>教員用画面</a></li>
+              @click="isStubMode = false">
+              <a v-if="!challengeMode">教員用画面</a>
+              <a v-if="challengeMode">実行テスト</a>
+            </li>
           </ul>
         </div>
         <div class="editor"><!-- エディタ -->
@@ -444,6 +450,9 @@ export default {
       }
       console.log = console_log_org
       this.grading()
+      this.isResult = true
+      this.isAnswer = false
+      this.isAssistant = false
     },
     reset() {
       this.answerContent = ''
@@ -543,6 +552,7 @@ export default {
       this.isFalse = false
       this.answerContent = ''
       this.stub = ''
+      this.consoleOut = []
     },
     async add() {
       await this.addQuestion()
