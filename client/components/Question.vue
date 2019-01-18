@@ -194,7 +194,8 @@ export default {
       timerObject: null,
       time: 0,
       errorMode: false,
-      enterModal: false
+      enterModal: false,
+      runMode: false
     }
   },
   computed: {
@@ -249,8 +250,10 @@ export default {
       require('brace/theme/vibrant_ink')
     },
     async run() {
-      // FIXME
-      console.log('this.answerContent', JSON.stringify(this.answerContent))
+      if (this.runMode) {
+        return
+      }
+      this.runMode = true
       this.consoleOut = []
       this.errorMode = false
       await this.sleep(100)
@@ -275,6 +278,7 @@ export default {
       }
       console.log = console_log_org
       this.grading()
+      this.runMode = false
     },
     reset() {
       this.answerContent = ''
@@ -341,6 +345,7 @@ export default {
       this.isCorrect = false
       this.isFalse = false
       this.answerContent = ''
+      this.consoleOut = []
       this.stub = ''
     },
     goToMenu() {

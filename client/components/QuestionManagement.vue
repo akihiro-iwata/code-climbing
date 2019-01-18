@@ -8,6 +8,7 @@
           v-if="activeQuestion.text"
           :question="activeQuestion.text"
           :is-admin-mode="true"
+          @isEdit="input"
           @save="save"/>
         <div style="height: 10px; width: 100%"/><!-- 隙間 -->
       </div><!-- 終点:問題文 -->
@@ -263,7 +264,57 @@
         <div style="height: 100%; width: 40px"/>
       </div>
     </div><!-- 終点: footer -->
+    <!-- Loading -->
     <Loading v-if="isLoading"/>
+    <!-- Complete -->
+    <div
+      :class="{'is-active': isComplete}"
+      class="modal">
+      <div class="modal-background"/>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">完了</p>
+          <button
+            class="delete"
+            aria-label="close"
+            @click="isComplete = false"/>
+        </header>
+        <section class="modal-card-body">
+          問題の保存が完了しました
+        </section>
+        <footer class="modal-card-foot">
+          <button
+            class="button is-info"
+            @click="isComplete = false">閉じる</button>
+        </footer>
+      </div>
+    </div>
+    <!-- Not Edit -->
+    <div
+      :class="{'is-active': isEdit && toNext}"
+      class="modal">
+      <div class="modal-background"/>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">確認</p>
+          <button
+            class="delete"
+            aria-label="close"
+            @click="toNext = false"/>
+        </header>
+        <section class="modal-card-body">
+          保存されていない変更がありますが、破棄しますか？
+        </section>
+        <footer class="modal-card-foot">
+          <button
+            class="button is-info"
+            @click="toNext = false">戻る</button>
+          <button
+            class="button is-danger"
+            @click="isEdit = false; next()">変更を破棄して次へ</button>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -306,7 +357,10 @@ export default {
       assistantAnswer: '',
       assistantComment: '',
       isLoading: false,
-      noAnswersError: false
+      noAnswersError: false,
+      isComplete: false,
+      isEdit: false,
+      toNext: false
     }
   },
   computed: {
@@ -405,12 +459,17 @@ export default {
       }
     },
     async next() {
+      this.toNext = true
+      if (this.isEdit) {
+        return
+      }
       this.isLoading = true
       this.clear()
       await this.nextQuestion()
       this.question = this.activeQuestion.text
       this.stub = this.activeQuestion.stub
       this.isLoading = false
+      this.toNext = false
     },
     async prev() {
       this.isLoading = true
@@ -429,6 +488,7 @@ export default {
     },
     async save(newQuestion) {
       this.isLoading = true
+      await this.sleep(1000)
       let questionText =
         newQuestion !== MouseEvent ? newQuestion : this.activeQuestion.text
       let params = {
@@ -448,6 +508,8 @@ export default {
         this.isLoading = false
       }
       this.isLoading = false
+      this.isComplete = true
+      this.isEdit = false
     },
     async addAnswer() {
       if (!this.inputAnswer) return ''
@@ -456,10 +518,12 @@ export default {
       await this.addAnswerToQuestion({ answers: answers })
       this.inputAnswer = ''
       this.noAnswersError = false
+      this.isComplete = true
     },
     async deleteAnswer(answerIndex) {
       await this.removeAnswerFromQuestion({ answerIndex: answerIndex })
       this.inputAnswer = ''
+      this.isComplete = true
     },
     async addAssistant() {
       if (!this.assistantAnswer || !this.assistantComment) return ''
@@ -469,6 +533,7 @@ export default {
       })
       this.assistantAnswer = ''
       this.assistantComment = ''
+      this.isComplete = true
     },
     async removeAssistant(key) {
       await this.removeAnswerAssistant({ key: key })
@@ -492,6 +557,9 @@ export default {
     },
     goToTeacherMenu() {
       this.$router.push('/teacher/home')
+    },
+    input(isEdit) {
+      this.isEdit = isEdit
     }
   }
 }
