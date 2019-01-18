@@ -47,7 +47,7 @@ export default {
   padding: 22px;
   background-color: white;
   width: 90vw;
-  height: 90vh;
+  height: 92vh;
   .header {
     min-height: 44px;
     width: 100%;
@@ -63,7 +63,6 @@ export default {
   .content {
     height: 60vh;
     width: 100%;
-    overflow-y: scroll;
   }
 
   .footer {
