@@ -16,7 +16,7 @@ class RubyException {
 
   message() {
     // prettier-ignore
-    if (this.errorName !== 'SyntaxError'　|| !this.messageTable[this.errorMessage]) return this.errorMessage
+    if (this.errorName !== 'SyntaxError'　|| !this.messageTable[this.errorMessage]) return [this.errorMessage]
     return ['【エラー: 文法誤り】', this.messageTable[this.errorMessage]]
   }
 }
