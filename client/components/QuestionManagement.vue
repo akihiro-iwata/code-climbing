@@ -632,6 +632,7 @@ export default {
         word-wrap: break-word;
         background-color: #101010;
         color: #92fa4d;
+        overflow-y: scroll;
       }
     }
 

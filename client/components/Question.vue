@@ -430,6 +430,7 @@ export default {
         padding-top: 5px;
         word-wrap: break-word;
         background-color: #101010;
+        overflow-y: scroll;
 
         .msg {
           color: #92fa4d;
