@@ -1,26 +1,20 @@
 # code-climbling
-
-> My transcendent Nuxt.js project
+## set env variable
+- development ... https://aiit-isa.backlog.jp/alias/file/11763368
+- production ... https://aiit-isa.backlog.jp/alias/file/11763369
 
 ## Build Setup
-
 ``` bash
+# install firebase-tools
+npm install -g firebase-tools
+
 # install dependencies
 $ npm install
 
 # serve with hot reload at localhost:3000
 $ npm run dev
 
-# build for production and launch server
-$ npm run build
-$ npm start
-
 # generate static project
 $ npm run generate
+$ firebase deploy
 ```
-
-## get config.json
-Set up json file for firebase authentication.
-
-url...`https://aiit-isa.backlog.jp/file/2018HK/config/config.json`  
-path...`config/config.json`
